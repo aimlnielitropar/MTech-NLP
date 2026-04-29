@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NLP Module 1 — Coding Topics</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Sora:wght@300;500;700&display=swap');
+
+  :root {
+    --bg: #0a0e1a;
+    --card: #111827;
+    --border: #1e2d45;
+    --accent1: #00d4ff;
+    --accent2: #7c3aed;
+    --accent3: #10b981;
+    --accent4: #f59e0b;
+    --accent5: #ef4444;
+    --accent6: #ec4899;
+    --text: #e2e8f0;
+    --muted: #64748b;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Sora', sans-serif;
+    min-height: 100vh;
+    padding: 40px 24px;
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 48px;
+  }
+
+  header .label {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 4px;
+    color: var(--accent1);
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+
+  header h1 {
+    font-size: clamp(24px, 4vw, 40px);
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--accent1), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1.2;
+    margin-bottom: 12px;
+  }
+
+  header p {
+    font-size: 14px;
+    color: var(--muted);
+    max-width: 500px;
+    margin: 0 auto;
+  }
+
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: center;
+    margin-bottom: 40px;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--muted);
+    cursor: pointer;
+    padding: 6px 12px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    transition: all 0.2s;
+  }
+  .legend-item:hover { border-color: var(--muted); color: var(--text); }
+  .legend-item.active { border-color: currentColor; color: var(--text); background: rgba(255,255,255,0.04); }
+
+  .dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px;
+    transition: transform 0.2s, border-color 0.2s, opacity 0.3s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    border-radius: 16px 16px 0 0;
+  }
+
+  .card:hover {
+    transform: translateY(-3px);
+    border-color: var(--muted);
+  }
+
+  .card.hidden { opacity: 0.15; pointer-events: none; }
+
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 14px;
+  }
+
+  .card-title {
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 1.3;
+    flex: 1;
+    padding-right: 12px;
+  }
+
+  .tag {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    padding: 3px 8px;
+    border-radius: 20px;
+    white-space: nowrap;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+  }
+
+  .difficulty {
+    font-size: 11px;
+    color: var(--muted);
+    margin-bottom: 10px;
+    font-family: 'Space Mono', monospace;
+  }
+
+  .desc {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.6;
+    margin-bottom: 14px;
+  }
+
+  .libs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 14px;
+  }
+
+  .lib-badge {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    background: rgba(255,255,255,0.05);
+    color: var(--muted);
+    border: 1px solid var(--border);
+  }
+
+  .task-list {
+    list-style: none;
+    border-top: 1px solid var(--border);
+    padding-top: 14px;
+  }
+
+  .task-list li {
+    font-size: 12px;
+    color: var(--muted);
+    padding: 4px 0;
+    display: flex;
+    gap: 8px;
+    align-items: baseline;
+  }
+
+  .task-list li::before {
+    content: '→';
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    flex-shrink: 0;
+  }
+
+  /* Colors per category */
+  .cat-pipeline  { --c: var(--accent1); }
+  .cat-ml        { --c: var(--accent2); }
+  .cat-app       { --c: var(--accent3); }
+  .cat-text      { --c: var(--accent4); }
+  .cat-eval      { --c: var(--accent5); }
+
+  .card.cat-pipeline::before { background: var(--accent1); }
+  .card.cat-ml::before       { background: var(--accent2); }
+  .card.cat-app::before      { background: var(--accent3); }
+  .card.cat-text::before     { background: var(--accent4); }
+  .card.cat-eval::before     { background: var(--accent5); }
+
+  .tag.cat-pipeline { background: rgba(0,212,255,0.12); color: var(--accent1); }
+  .tag.cat-ml       { background: rgba(124,58,237,0.15); color: #a78bfa; }
+  .tag.cat-app      { background: rgba(16,185,129,0.12); color: var(--accent3); }
+  .tag.cat-text     { background: rgba(245,158,11,0.12); color: var(--accent4); }
+  .tag.cat-eval     { background: rgba(239,68,68,0.12); color: var(--accent5); }
+
+  .dot.cat-pipeline { background: var(--accent1); }
+  .dot.cat-ml       { background: #a78bfa; }
+  .dot.cat-app      { background: var(--accent3); }
+  .dot.cat-text     { background: var(--accent4); }
+  .dot.cat-eval     { background: var(--accent5); }
+
+  .summary-bar {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-bottom: 36px;
+  }
+
+  .stat-box {
+    text-align: center;
+    padding: 14px 20px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    min-width: 100px;
+  }
+
+  .stat-box .num {
+    font-family: 'Space Mono', monospace;
+    font-size: 28px;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--accent1), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .stat-box .lbl {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+
+  footer {
+    text-align: center;
+    margin-top: 56px;
+    font-size: 12px;
+    color: var(--muted);
+    font-family: 'Space Mono', monospace;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="label">MTech NLP · Module 1</div>
+  <h1>Concepts That Need Coding</h1>
+  <p>An interactive map of all topics in Module 1 that involve programming — with what to code, difficulty, and tools.</p>
+</header>
+
+<div class="summary-bar">
+  <div class="stat-box"><div class="num">8</div><div class="lbl">Coding Topics</div></div>
+  <div class="stat-box"><div class="num">6</div><div class="lbl">Applications</div></div>
+  <div class="stat-box"><div class="num">5</div><div class="lbl">Categories</div></div>
+</div>
+
+<div class="legend" id="legend">
+  <div class="legend-item active cat-pipeline" data-cat="cat-pipeline"><span class="dot cat-pipeline"></span> NLP Pipeline</div>
+  <div class="legend-item active cat-ml" data-cat="cat-ml"><span class="dot cat-ml"></span> ML Role</div>
+  <div class="legend-item active cat-app" data-cat="cat-app"><span class="dot cat-app"></span> Applications</div>
+  <div class="legend-item active cat-text" data-cat="cat-text"><span class="dot cat-text"></span> Text Processing</div>
+  <div class="legend-item active cat-eval" data-cat="cat-eval"><span class="dot cat-eval"></span> Evaluation</div>
+</div>
+
+<div class="grid" id="grid">
+
+  <!-- Card 1 -->
+  <div class="card cat-pipeline" data-cat="cat-pipeline">
+    <div class="card-header">
+      <div class="card-title">Generic NLP Pipeline</div>
+      <span class="tag cat-pipeline">NLP Pipeline</span>
+    </div>
+    <div class="difficulty">⬛⬜⬜⬜ Beginner</div>
+    <div class="desc">Build an end-to-end text processing pipeline: tokenize → normalize → tag → parse → output. Shows all stages in sequence.</div>
+    <div class="libs">
+      <span class="lib-badge">NLTK</span>
+      <span class="lib-badge">spaCy</span>
+      <span class="lib-badge">Python</span>
+    </div>
+    <ul class="task-list">
+      <li>Implement each stage as a function/module</li>
+      <li>Pass raw text through each level and inspect output</li>
+      <li>Visualize stage-by-stage transformation</li>
+    </ul>
+  </div>
+
+  <!-- Card 2 -->
+  <div class="card cat-text" data-cat="cat-text">
+    <div class="card-header">
+      <div class="card-title">Ambiguity Detection</div>
+      <span class="tag cat-text">Text Processing</span>
+    </div>
+    <div class="difficulty">⬛⬛⬜⬜ Intermediate</div>
+    <div class="desc">Write code to identify and illustrate lexical, syntactic, and semantic ambiguity in example sentences using parsing and word sense tools.</div>
+    <div class="libs">
+      <span class="lib-badge">spaCy</span>
+      <span class="lib-badge">NLTK WordNet</span>
+    </div>
+    <ul class="task-list">
+      <li>Detect words with multiple senses (lexical ambiguity)</li>
+      <li>Parse sentences and show multiple parse trees</li>
+      <li>Log ambiguity score per sentence</li>
+    </ul>
+  </div>
+
+  <!-- Card 3 -->
+  <div class="card cat-ml" data-cat="cat-ml">
+    <div class="card-header">
+      <div class="card-title">ML vs Rule-Based Comparison</div>
+      <span class="tag cat-ml">ML Role</span>
+    </div>
+    <div class="difficulty">⬛⬛⬜⬜ Intermediate</div>
+    <div class="desc">Implement a simple task (e.g., spam detection or POS tagging) using both hand-written rules AND an ML model. Compare accuracy side by side.</div>
+    <div class="libs">
+      <span class="lib-badge">scikit-learn</span>
+      <span class="lib-badge">NLTK</span>
+      <span class="lib-badge">pandas</span>
+    </div>
+    <ul class="task-list">
+      <li>Write rule-based classifier with regex/keyword lists</li>
+      <li>Train Naive Bayes or Logistic Regression model</li>
+      <li>Compare accuracy, precision, recall on same test set</li>
+    </ul>
+  </div>
+
+  <!-- Card 4 -->
+  <div class="card cat-app" data-cat="cat-app">
+    <div class="card-header">
+      <div class="card-title">Machine Translation (Demo)</div>
+      <span class="tag cat-app">Application</span>
+    </div>
+    <div class="difficulty">⬛⬛⬜⬜ Intermediate</div>
+    <div class="desc">Implement a simple word-level translation using a bilingual dictionary, then contrast with a pretrained neural MT model (Helsinki-NLP).</div>
+    <div class="libs">
+      <span class="lib-badge">transformers</span>
+      <span class="lib-badge">HuggingFace</span>
+      <span class="lib-badge">Python dict</span>
+    </div>
+    <ul class="task-list">
+      <li>Build dictionary-lookup translator</li>
+      <li>Use a pretrained MarianMT model for comparison</li>
+      <li>Observe failure modes of both approaches</li>
+    </ul>
+  </div>
+
+  <!-- Card 5 -->
+  <div class="card cat-app" data-cat="cat-app">
+    <div class="card-header">
+      <div class="card-title">Question Answering System</div>
+      <span class="tag cat-app">Application</span>
+    </div>
+    <div class="difficulty">⬛⬛⬛⬜ Advanced</div>
+    <div class="desc">Build a simple extractive QA system: given a paragraph and a question, extract the answer span. Use a retrieval-based pipeline or pretrained model.</div>
+    <div class="libs">
+      <span class="lib-badge">transformers</span>
+      <span class="lib-badge">BERT/DistilBERT</span>
+      <span class="lib-badge">HuggingFace</span>
+    </div>
+    <ul class="task-list">
+      <li>Set up a QA pipeline with HuggingFace</li>
+      <li>Feed custom context paragraphs</li>
+      <li>Evaluate span extraction accuracy (Exact Match, F1)</li>
+    </ul>
+  </div>
+
+  <!-- Card 6 -->
+  <div class="card cat-app" data-cat="cat-app">
+    <div class="card-header">
+      <div class="card-title">Information Retrieval (TF-IDF)</div>
+      <span class="tag cat-app">Application</span>
+    </div>
+    <div class="difficulty">⬛⬛⬜⬜ Intermediate</div>
+    <div class="desc">Build a document retrieval engine: index a set of documents, accept a query, and return ranked results using TF-IDF similarity.</div>
+    <div class="libs">
+      <span class="lib-badge">scikit-learn</span>
+      <span class="lib-badge">NumPy</span>
+      <span class="lib-badge">NLTK</span>
+    </div>
+    <ul class="task-list">
+      <li>Preprocess and vectorize documents with TF-IDF</li>
+      <li>Compute cosine similarity for query matching</li>
+      <li>Return ranked document list</li>
+    </ul>
+  </div>
+
+  <!-- Card 7 -->
+  <div class="card cat-app" data-cat="cat-app">
+    <div class="card-header">
+      <div class="card-title">Text Categorization</div>
+      <span class="tag cat-app">Application</span>
+    </div>
+    <div class="difficulty">⬛⬛⬜⬜ Intermediate</div>
+    <div class="desc">Train a text classifier on a labeled dataset (e.g., 20 Newsgroups or AG News). Implement preprocessing, feature extraction, and evaluation.</div>
+    <div class="libs">
+      <span class="lib-badge">scikit-learn</span>
+      <span class="lib-badge">NLTK</span>
+      <span class="lib-badge">datasets (HF)</span>
+    </div>
+    <ul class="task-list">
+      <li>Preprocess text: lowercase, stop-word removal, stemming</li>
+      <li>Extract Bag-of-Words or TF-IDF features</li>
+      <li>Train and evaluate Naive Bayes / SVM classifier</li>
+    </ul>
+  </div>
+
+  <!-- Card 8 -->
+  <div class="card cat-app" data-cat="cat-app">
+    <div class="card-header">
+      <div class="card-title">Text Summarization</div>
+      <span class="tag cat-app">Application</span>
+    </div>
+    <div class="difficulty">⬛⬛⬜⬜ Intermediate</div>
+    <div class="desc">Implement extractive summarization (sentence scoring with TF-IDF) and contrast with abstractive summarization using a pretrained T5/BART model.</div>
+    <div class="libs">
+      <span class="lib-badge">NLTK</span>
+      <span class="lib-badge">transformers</span>
+      <span class="lib-badge">rouge-score</span>
+    </div>
+    <ul class="task-list">
+      <li>Score sentences by word importance (extractive)</li>
+      <li>Use HuggingFace pipeline for abstractive summary</li>
+      <li>Evaluate with ROUGE score</li>
+    </ul>
+  </div>
+
+  <!-- Card 9 -->
+  <div class="card cat-app" data-cat="cat-app">
+    <div class="card-header">
+      <div class="card-title">Sentiment Analysis</div>
+      <span class="tag cat-app">Application</span>
+    </div>
+    <div class="difficulty">⬛⬜⬜⬜ Beginner</div>
+    <div class="desc">Classify text as positive/negative/neutral. Start with a lexicon-based approach (VADER), then move to a trained ML model.</div>
+    <div class="libs">
+      <span class="lib-badge">NLTK VADER</span>
+      <span class="lib-badge">scikit-learn</span>
+      <span class="lib-badge">transformers</span>
+    </div>
+    <ul class="task-list">
+      <li>Apply VADER to sample reviews, inspect compound score</li>
+      <li>Train a logistic regression classifier on IMDB dataset</li>
+      <li>Compare lexicon vs ML accuracy</li>
+    </ul>
+  </div>
+
+  <!-- Card 10 -->
+  <div class="card cat-eval" data-cat="cat-eval">
+    <div class="card-header">
+      <div class="card-title">NLP Evaluation Metrics</div>
+      <span class="tag cat-eval">Evaluation</span>
+    </div>
+    <div class="difficulty">⬛⬜⬜⬜ Beginner</div>
+    <div class="desc">Implement and understand core NLP evaluation metrics: accuracy, precision, recall, F1, BLEU, ROUGE — used across all Module 1 applications.</div>
+    <div class="libs">
+      <span class="lib-badge">scikit-learn</span>
+      <span class="lib-badge">nltk.translate</span>
+      <span class="lib-badge">rouge-score</span>
+    </div>
+    <ul class="task-list">
+      <li>Compute confusion matrix, precision, recall, F1</li>
+      <li>Calculate BLEU score for MT output</li>
+      <li>Calculate ROUGE for summarization output</li>
+    </ul>
+  </div>
+
+</div>
+
+<footer>
+  NLP Module 1 — Coding Map &nbsp;·&nbsp; MTech Program &nbsp;·&nbsp; Click category pills to filter
+</footer>
+
+<script>
+  const legendItems = document.querySelectorAll('.legend-item');
+  const cards = document.querySelectorAll('.card');
+  let activeCategories = new Set(['cat-pipeline','cat-ml','cat-app','cat-text','cat-eval']);
+
+  legendItems.forEach(item => {
+    item.addEventListener('click', () => {
+      const cat = item.dataset.cat;
+      if (activeCategories.has(cat)) {
+        if (activeCategories.size === 1) return; // keep at least one
+        activeCategories.delete(cat);
+        item.classList.remove('active');
+      } else {
+        activeCategories.add(cat);
+        item.classList.add('active');
+      }
+      cards.forEach(card => {
+        card.classList.toggle('hidden', !activeCategories.has(card.dataset.cat));
+      });
+    });
+  });
+</script>
+
+</body>
+</html>

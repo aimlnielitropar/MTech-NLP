@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NLP Module 2 — Coding Topics Map</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap');
+
+  :root {
+    --bg:       #f5f0e8;
+    --surface:  #fffdf7;
+    --border:   #ddd5c0;
+    --ink:      #1a1208;
+    --muted:    #7a6a50;
+    --c1: #b5451b;   /* Morphology — terracotta */
+    --c2: #2a6f5e;   /* Regex — forest */
+    --c3: #1a4a8a;   /* Automata — navy */
+    --c4: #7a3a8a;   /* FST — plum */
+    --c5: #8a6a0a;   /* N-Grams — amber */
+    --shadow: 0 2px 12px rgba(26,18,8,0.10);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    padding: 48px 24px 64px;
+    background-image: 
+      radial-gradient(ellipse at 10% 20%, rgba(181,69,27,0.06) 0%, transparent 50%),
+      radial-gradient(ellipse at 90% 80%, rgba(26,74,138,0.06) 0%, transparent 50%);
+  }
+
+  /* ── HEADER ── */
+  header {
+    max-width: 900px;
+    margin: 0 auto 48px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: end;
+    gap: 24px;
+    padding-bottom: 24px;
+    border-bottom: 2px solid var(--border);
+  }
+
+  .header-left .eyebrow {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--c1);
+    margin-bottom: 10px;
+  }
+
+  header h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(28px, 5vw, 48px);
+    font-weight: 900;
+    line-height: 1.1;
+    color: var(--ink);
+    margin-bottom: 10px;
+  }
+
+  header h1 span { color: var(--c1); }
+
+  header p {
+    font-size: 14px;
+    color: var(--muted);
+    max-width: 480px;
+    line-height: 1.7;
+  }
+
+  .stats-cluster {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: flex-end;
+  }
+
+  .stat-pill {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    padding: 6px 14px;
+    border-radius: 20px;
+    border: 1.5px solid var(--border);
+    background: var(--surface);
+    color: var(--ink);
+    white-space: nowrap;
+  }
+
+  .stat-pill strong { color: var(--c1); }
+
+  /* ── FILTER BAR ── */
+  .filter-bar {
+    max-width: 900px;
+    margin: 0 auto 32px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .filter-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-right: 4px;
+  }
+
+  .filter-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 14px;
+    border-radius: 6px;
+    border: 1.5px solid var(--border);
+    background: var(--surface);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.18s ease;
+    box-shadow: var(--shadow);
+  }
+
+  .filter-btn:hover { border-color: var(--ink); color: var(--ink); }
+  .filter-btn.active { color: #fff; border-color: transparent; }
+  .filter-btn.active.f1 { background: var(--c1); }
+  .filter-btn.active.f2 { background: var(--c2); }
+  .filter-btn.active.f3 { background: var(--c3); }
+  .filter-btn.active.f4 { background: var(--c4); }
+  .filter-btn.active.f5 { background: var(--c5); }
+
+  .fbadge { width: 8px; height: 8px; border-radius: 50%; }
+  .fbadge.f1 { background: var(--c1); }
+  .fbadge.f2 { background: var(--c2); }
+  .fbadge.f3 { background: var(--c3); }
+  .fbadge.f4 { background: var(--c4); }
+  .fbadge.f5 { background: var(--c5); }
+
+  /* ── CARDS GRID ── */
+  .grid {
+    max-width: 900px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+    gap: 20px;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    padding: 22px;
+    box-shadow: var(--shadow);
+    transition: transform 0.2s, box-shadow 0.2s, opacity 0.25s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .card::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 4px; height: 100%;
+    border-radius: 12px 0 0 12px;
+  }
+
+  .card.c1::after { background: var(--c1); }
+  .card.c2::after { background: var(--c2); }
+  .card.c3::after { background: var(--c3); }
+  .card.c4::after { background: var(--c4); }
+  .card.c5::after { background: var(--c5); }
+
+  .card:hover { transform: translateY(-4px); box-shadow: 0 8px 28px rgba(26,18,8,0.14); }
+  .card.hidden { opacity: 0.1; pointer-events: none; transform: scale(0.97); }
+
+  .card-num {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+
+  .card-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 17px;
+    font-weight: 700;
+    line-height: 1.3;
+    color: var(--ink);
+    margin-bottom: 4px;
+  }
+
+  .card-cat {
+    display: inline-block;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    padding: 2px 8px;
+    border-radius: 4px;
+    margin-bottom: 12px;
+    font-weight: 500;
+  }
+
+  .card.c1 .card-cat { background: rgba(181,69,27,0.10); color: var(--c1); }
+  .card.c2 .card-cat { background: rgba(42,111,94,0.10); color: var(--c2); }
+  .card.c3 .card-cat { background: rgba(26,74,138,0.10); color: var(--c3); }
+  .card.c4 .card-cat { background: rgba(122,58,138,0.10); color: var(--c4); }
+  .card.c5 .card-cat { background: rgba(138,106,10,0.10); color: var(--c5); }
+
+  .difficulty {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    margin-bottom: 10px;
+  }
+
+  .desc {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.65;
+    margin-bottom: 14px;
+  }
+
+  .tools {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-bottom: 14px;
+  }
+
+  .tool-tag {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    padding: 3px 8px;
+    border-radius: 4px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--muted);
+  }
+
+  .tasks {
+    border-top: 1px solid var(--border);
+    padding-top: 12px;
+    list-style: none;
+  }
+
+  .tasks li {
+    font-size: 12px;
+    color: var(--muted);
+    padding: 3px 0;
+    display: flex;
+    gap: 8px;
+    line-height: 1.5;
+  }
+
+  .tasks li::before {
+    content: '›';
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    color: var(--border);
+    flex-shrink: 0;
+    margin-top: -1px;
+  }
+
+  /* ── DEPENDENCY FLOW ── */
+  .flow-section {
+    max-width: 900px;
+    margin: 48px auto 0;
+    padding-top: 32px;
+    border-top: 2px solid var(--border);
+  }
+
+  .flow-section h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 22px;
+    color: var(--ink);
+    margin-bottom: 24px;
+  }
+
+  .flow {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0;
+    row-gap: 12px;
+  }
+
+  .flow-node {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .flow-box {
+    padding: 10px 16px;
+    border-radius: 8px;
+    border: 1.5px solid;
+    font-size: 12px;
+    font-weight: 500;
+    white-space: nowrap;
+    position: relative;
+  }
+
+  .flow-box.c1 { border-color: var(--c1); color: var(--c1); background: rgba(181,69,27,0.07); }
+  .flow-box.c2 { border-color: var(--c2); color: var(--c2); background: rgba(42,111,94,0.07); }
+  .flow-box.c3 { border-color: var(--c3); color: var(--c3); background: rgba(26,74,138,0.07); }
+  .flow-box.c4 { border-color: var(--c4); color: var(--c4); background: rgba(122,58,138,0.07); }
+  .flow-box.c5 { border-color: var(--c5); color: var(--c5); background: rgba(138,106,10,0.07); }
+
+  .flow-num {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+
+  .flow-arrow {
+    font-size: 18px;
+    color: var(--border);
+    padding: 0 6px;
+    margin-bottom: 18px;
+  }
+
+  /* ── FOOTER ── */
+  footer {
+    max-width: 900px;
+    margin: 48px auto 0;
+    text-align: center;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 1px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <div class="eyebrow">MTech NLP · Module 2</div>
+    <h1>Concepts That<br>Need <span>Coding</span></h1>
+    <p>An interactive map of all topics in Module 2 that involve programming — with tasks, tools, difficulty levels, and teaching sequence.</p>
+  </div>
+  <div class="stats-cluster">
+    <div class="stat-pill"><strong>9</strong> Coding Topics</div>
+    <div class="stat-pill"><strong>5</strong> Categories</div>
+    <div class="stat-pill"><strong>3</strong> Difficulty Levels</div>
+    <div class="stat-pill"><strong>Module 2</strong> Morphology & LMs</div>
+  </div>
+</header>
+
+<div class="filter-bar">
+  <span class="filter-label">Filter →</span>
+  <button class="filter-btn f1 active" data-cat="c1"><span class="fbadge f1"></span> Morphology</button>
+  <button class="filter-btn f2 active" data-cat="c2"><span class="fbadge f2"></span> Regex</button>
+  <button class="filter-btn f3 active" data-cat="c3"><span class="fbadge f3"></span> Automata</button>
+  <button class="filter-btn f4 active" data-cat="c4"><span class="fbadge f4"></span> FST</button>
+  <button class="filter-btn f5 active" data-cat="c5"><span class="fbadge f5"></span> N-Grams</button>
+</div>
+
+<div class="grid" id="grid">
+
+  <!-- CARD 1 -->
+  <div class="card c1" data-cat="c1">
+    <div class="card-num">TOPIC 01</div>
+    <div class="card-title">Inflectional & Derivational Morphology</div>
+    <div class="card-cat">Morphology</div>
+    <div class="difficulty">⬛⬜⬜⬜ Beginner</div>
+    <div class="desc">Analyse English word forms — identify stems, affixes, inflections (plays→play+s) and derivations (happy→happiness). Use NLTK WordNet + MorphyFeedback.</div>
+    <div class="tools">
+      <span class="tool-tag">NLTK</span>
+      <span class="tool-tag">WordNet</span>
+      <span class="tool-tag">spaCy</span>
+    </div>
+    <ul class="tasks">
+      <li>Classify inflectional vs derivational word pairs</li>
+      <li>Extract morpheme boundaries using NLTK morphy()</li>
+      <li>Build a morphological analysis table for a word list</li>
+    </ul>
+  </div>
+
+  <!-- CARD 2 -->
+  <div class="card c2" data-cat="c2">
+    <div class="card-num">TOPIC 02</div>
+    <div class="card-title">Regular Expressions for NLP</div>
+    <div class="card-cat">Regex</div>
+    <div class="difficulty">⬛⬜⬜⬜ Beginner</div>
+    <div class="desc">Write Python <code>re</code> patterns for real NLP tasks: tokenization, date/email extraction, phone number normalization, and pattern-based morpheme detection.</div>
+    <div class="tools">
+      <span class="tool-tag">Python re</span>
+      <span class="tool-tag">NLTK RegexpTokenizer</span>
+    </div>
+    <ul class="tasks">
+      <li>Extract emails, dates, phone numbers from raw text</li>
+      <li>Build a regex-based word tokenizer (handle contractions)</li>
+      <li>Detect inflectional suffixes (-ing, -ed, -s, -er) via patterns</li>
+      <li>Implement regex-based sentence boundary detection</li>
+    </ul>
+  </div>
+
+  <!-- CARD 3 -->
+  <div class="card c3" data-cat="c3">
+    <div class="card-num">TOPIC 03</div>
+    <div class="card-title">Finite Automata (DFA & NFA)</div>
+    <div class="card-cat">Automata</div>
+    <div class="difficulty">⬛⬛⬜⬜ Intermediate</div>
+    <div class="desc">Implement a Deterministic Finite Automaton (DFA) and Non-deterministic FA (NFA) in Python. Use them to recognise morphological patterns (e.g., valid English plurals).</div>
+    <div class="tools">
+      <span class="tool-tag">Python (pure)</span>
+      <span class="tool-tag">networkx</span>
+      <span class="tool-tag">matplotlib</span>
+    </div>
+    <ul class="tasks">
+      <li>Build a DFA class with states, transitions, accept states</li>
+      <li>Recognise simple patterns: numbers, dates, plural -s/-es/-ies</li>
+      <li>Simulate NFA with epsilon transitions</li>
+      <li>Visualize FA state diagram using networkx</li>
+    </ul>
+  </div>
+
+  <!-- CARD 4 -->
+  <div class="card c4" data-cat="c4">
+    <div class="card-num">TOPIC 04</div>
+    <div class="card-title">Finite State Transducers (FST)</div>
+    <div class="card-cat">FST</div>
+    <div class="difficulty">⬛⬛⬛⬜ Advanced</div>
+    <div class="desc">Implement an FST that maps between surface forms and underlying morphological forms. E.g., "foxes" ↔ "fox+N+PL". Understand input/output tape duality.</div>
+    <div class="tools">
+      <span class="tool-tag">Python (pure)</span>
+      <span class="tool-tag">graphviz</span>
+      <span class="tool-tag">fst library (optional)</span>
+    </div>
+    <ul class="tasks">
+      <li>Implement FST as a state-transition table with I/O pairs</li>
+      <li>Transduce: "fox" → "foxes", "play" → "played"</li>
+      <li>Run transducer in both directions (analysis & generation)</li>
+      <li>Visualize FST as a labeled directed graph</li>
+    </ul>
+  </div>
+
+  <!-- CARD 5 -->
+  <div class="card c4" data-cat="c4">
+    <div class="card-num">TOPIC 05</div>
+    <div class="card-title">Morphological Parsing with FST</div>
+    <div class="card-cat">FST</div>
+    <div class="difficulty">⬛⬛⬛⬜ Advanced</div>
+    <div class="desc">Use the FST framework to parse words into morpheme sequences. Input: surface word → Output: lemma + morphological tags (POS, tense, number, person).</div>
+    <div class="tools">
+      <span class="tool-tag">Python (pure)</span>
+      <span class="tool-tag">NLTK</span>
+      <span class="tool-tag">spaCy morphology</span>
+    </div>
+    <ul class="tasks">
+      <li>Parse "walked" → walk + VERB + PAST</li>
+      <li>Parse "happiest" → happy + ADJ + SUPERLATIVE</li>
+      <li>Handle orthographic alternations (y→i: "happy→happier")</li>
+      <li>Compare FST output with spaCy's built-in morphologizer</li>
+    </ul>
+  </div>
+
+  <!-- CARD 6 -->
+  <div class="card c4" data-cat="c4">
+    <div class="card-num">TOPIC 06</div>
+    <div class="card-title">Lexicon-Free FST</div>
+    <div class="card-cat">FST</div>
+    <div class="difficulty">⬛⬛⬛⬜ Advanced</div>
+    <div class="desc">Build a morphological analyser that works without a pre-defined word list — using only phonological/orthographic rules encoded in the transducer itself.</div>
+    <div class="tools">
+      <span class="tool-tag">Python (pure)</span>
+      <span class="tool-tag">re</span>
+    </div>
+    <ul class="tasks">
+      <li>Implement suffix-stripping rules as FST transitions</li>
+      <li>Handle spelling changes: doubling (run→running), e-drop (make→making)</li>
+      <li>Apply rules in cascade: surface → intermediate → underlying</li>
+      <li>Test on unseen words not in any dictionary</li>
+    </ul>
+  </div>
+
+  <!-- CARD 7 -->
+  <div class="card c1" data-cat="c1">
+    <div class="card-num">TOPIC 07</div>
+    <div class="card-title">Porter Stemmer</div>
+    <div class="card-cat">Morphology</div>
+    <div class="difficulty">⬛⬜⬜⬜ Beginner</div>
+    <div class="desc">Implement the Porter Stemmer algorithm from scratch (5 rule phases). Compare with NLTK's built-in implementation and with Snowball/Lancaster stemmers.</div>
+    <div class="tools">
+      <span class="tool-tag">Python (pure)</span>
+      <span class="tool-tag">NLTK</span>
+      <span class="tool-tag">re</span>
+    </div>
+    <ul class="tasks">
+      <li>Implement all 5 Porter phases (Step 1a, 1b, 1c, 2, 3, 4, 5)</li>
+      <li>Verify with test cases from Porter's original paper</li>
+      <li>Compare Porter vs Snowball vs Lancaster on word lists</li>
+      <li>Measure over-stemming and under-stemming errors</li>
+    </ul>
+  </div>
+
+  <!-- CARD 8 -->
+  <div class="card c5" data-cat="c5">
+    <div class="card-num">TOPIC 08</div>
+    <div class="card-title">N-Gram Language Model</div>
+    <div class="card-cat">N-Grams</div>
+    <div class="difficulty">⬛⬛⬜⬜ Intermediate</div>
+    <div class="desc">Build Unigram, Bigram, and Trigram language models from a corpus. Compute MLE probabilities, apply Laplace smoothing, and calculate sentence perplexity.</div>
+    <div class="tools">
+      <span class="tool-tag">Python (pure)</span>
+      <span class="tool-tag">NLTK</span>
+      <span class="tool-tag">collections</span>
+      <span class="tool-tag">numpy</span>
+    </div>
+    <ul class="tasks">
+      <li>Count n-grams from tokenized corpus</li>
+      <li>Compute P(word | context) with MLE + Laplace smoothing</li>
+      <li>Generate text by sampling from the model</li>
+      <li>Calculate perplexity on held-out test sentences</li>
+    </ul>
+  </div>
+
+  <!-- CARD 9 -->
+  <div class="card c5" data-cat="c5">
+    <div class="card-num">TOPIC 09</div>
+    <div class="card-title">N-Gram Spelling Correction</div>
+    <div class="card-cat">N-Grams</div>
+    <div class="difficulty">⬛⬛⬜⬜ Intermediate</div>
+    <div class="desc">Implement a noisy channel spelling corrector combining an edit-distance error model with an n-gram language model. Rank candidates by P(word) × P(error|word).</div>
+    <div class="tools">
+      <span class="tool-tag">Python (pure)</span>
+      <span class="tool-tag">NLTK</span>
+      <span class="tool-tag">difflib</span>
+      <span class="tool-tag">numpy</span>
+    </div>
+    <ul class="tasks">
+      <li>Generate candidate corrections via edit distance (insert/delete/sub)</li>
+      <li>Score candidates with unigram language model probability</li>
+      <li>Re-rank using bigram context (noisy channel model)</li>
+      <li>Evaluate on a misspelled word test set</li>
+    </ul>
+  </div>
+
+</div>
+
+<!-- ── TEACHING SEQUENCE FLOW ── -->
+<div class="flow-section">
+  <h2>Recommended Teaching Sequence</h2>
+  <div class="flow">
+
+    <div class="flow-node">
+      <div class="flow-box c2">Topic 02<br>Regex</div>
+      <div class="flow-num">start here</div>
+    </div>
+    <div class="flow-arrow">→</div>
+
+    <div class="flow-node">
+      <div class="flow-box c1">Topic 01<br>Morphology</div>
+      <div class="flow-num">concepts</div>
+    </div>
+    <div class="flow-arrow">→</div>
+
+    <div class="flow-node">
+      <div class="flow-box c1">Topic 07<br>Porter Stemmer</div>
+      <div class="flow-num">apply it</div>
+    </div>
+    <div class="flow-arrow">→</div>
+
+    <div class="flow-node">
+      <div class="flow-box c3">Topic 03<br>Finite Automata</div>
+      <div class="flow-num">theory</div>
+    </div>
+    <div class="flow-arrow">→</div>
+
+    <div class="flow-node">
+      <div class="flow-box c4">Topic 04<br>FST</div>
+      <div class="flow-num">extend FA</div>
+    </div>
+    <div class="flow-arrow">→</div>
+
+    <div class="flow-node">
+      <div class="flow-box c4">Topic 05<br>Morph. Parsing</div>
+      <div class="flow-num">apply FST</div>
+    </div>
+    <div class="flow-arrow">→</div>
+
+    <div class="flow-node">
+      <div class="flow-box c4">Topic 06<br>Lexicon-Free FST</div>
+      <div class="flow-num">extend</div>
+    </div>
+    <div class="flow-arrow">→</div>
+
+    <div class="flow-node">
+      <div class="flow-box c5">Topic 08<br>N-Gram LM</div>
+      <div class="flow-num">statistics</div>
+    </div>
+    <div class="flow-arrow">→</div>
+
+    <div class="flow-node">
+      <div class="flow-box c5">Topic 09<br>Spell Correct</div>
+      <div class="flow-num">apply LM</div>
+    </div>
+
+  </div>
+
+  <!-- Summary table -->
+  <table style="margin-top:32px; width:100%; border-collapse:collapse; font-size:13px;">
+    <thead>
+      <tr style="border-bottom:2px solid var(--border);">
+        <th style="text-align:left; padding:8px 12px; font-family:'DM Mono',monospace; font-size:10px; letter-spacing:2px; color:var(--muted); font-weight:500;">TOPIC</th>
+        <th style="text-align:left; padding:8px 12px; font-family:'DM Mono',monospace; font-size:10px; letter-spacing:2px; color:var(--muted); font-weight:500;">CATEGORY</th>
+        <th style="text-align:left; padding:8px 12px; font-family:'DM Mono',monospace; font-size:10px; letter-spacing:2px; color:var(--muted); font-weight:500;">PRIMARY LIBRARY</th>
+        <th style="text-align:left; padding:8px 12px; font-family:'DM Mono',monospace; font-size:10px; letter-spacing:2px; color:var(--muted); font-weight:500;">DIFFICULTY</th>
+        <th style="text-align:left; padding:8px 12px; font-family:'DM Mono',monospace; font-size:10px; letter-spacing:2px; color:var(--muted); font-weight:500;">BUILDS ON</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:9px 12px; font-weight:500;">01 · Morphology Analysis</td>
+        <td style="padding:9px 12px; color:var(--c1);">Morphology</td>
+        <td style="padding:9px 12px; font-family:'DM Mono',monospace; font-size:11px;">NLTK, WordNet</td>
+        <td style="padding:9px 12px;">⬛⬜⬜⬜</td>
+        <td style="padding:9px 12px; color:var(--muted);">Module 1 Pipeline</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--border); background:rgba(0,0,0,0.02);">
+        <td style="padding:9px 12px; font-weight:500;">02 · Regular Expressions</td>
+        <td style="padding:9px 12px; color:var(--c2);">Regex</td>
+        <td style="padding:9px 12px; font-family:'DM Mono',monospace; font-size:11px;">Python re</td>
+        <td style="padding:9px 12px;">⬛⬜⬜⬜</td>
+        <td style="padding:9px 12px; color:var(--muted);">Python basics</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:9px 12px; font-weight:500;">03 · Finite Automata</td>
+        <td style="padding:9px 12px; color:var(--c3);">Automata</td>
+        <td style="padding:9px 12px; font-family:'DM Mono',monospace; font-size:11px;">Pure Python</td>
+        <td style="padding:9px 12px;">⬛⬛⬜⬜</td>
+        <td style="padding:9px 12px; color:var(--muted);">Topic 02 (Regex)</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--border); background:rgba(0,0,0,0.02);">
+        <td style="padding:9px 12px; font-weight:500;">04 · Finite State Transducers</td>
+        <td style="padding:9px 12px; color:var(--c4);">FST</td>
+        <td style="padding:9px 12px; font-family:'DM Mono',monospace; font-size:11px;">Pure Python</td>
+        <td style="padding:9px 12px;">⬛⬛⬛⬜</td>
+        <td style="padding:9px 12px; color:var(--muted);">Topic 03 (FA)</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:9px 12px; font-weight:500;">05 · Morphological Parsing</td>
+        <td style="padding:9px 12px; color:var(--c4);">FST</td>
+        <td style="padding:9px 12px; font-family:'DM Mono',monospace; font-size:11px;">NLTK + spaCy</td>
+        <td style="padding:9px 12px;">⬛⬛⬛⬜</td>
+        <td style="padding:9px 12px; color:var(--muted);">Topics 01 + 04</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--border); background:rgba(0,0,0,0.02);">
+        <td style="padding:9px 12px; font-weight:500;">06 · Lexicon-Free FST</td>
+        <td style="padding:9px 12px; color:var(--c4);">FST</td>
+        <td style="padding:9px 12px; font-family:'DM Mono',monospace; font-size:11px;">Pure Python</td>
+        <td style="padding:9px 12px;">⬛⬛⬛⬜</td>
+        <td style="padding:9px 12px; color:var(--muted);">Topic 05</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:9px 12px; font-weight:500;">07 · Porter Stemmer</td>
+        <td style="padding:9px 12px; color:var(--c1);">Morphology</td>
+        <td style="padding:9px 12px; font-family:'DM Mono',monospace; font-size:11px;">NLTK</td>
+        <td style="padding:9px 12px;">⬛⬜⬜⬜</td>
+        <td style="padding:9px 12px; color:var(--muted);">Topics 01 + 02</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--border); background:rgba(0,0,0,0.02);">
+        <td style="padding:9px 12px; font-weight:500;">08 · N-Gram Language Model</td>
+        <td style="padding:9px 12px; color:var(--c5);">N-Grams</td>
+        <td style="padding:9px 12px; font-family:'DM Mono',monospace; font-size:11px;">NLTK + NumPy</td>
+        <td style="padding:9px 12px;">⬛⬛⬜⬜</td>
+        <td style="padding:9px 12px; color:var(--muted);">Module 1 basics</td>
+      </tr>
+      <tr>
+        <td style="padding:9px 12px; font-weight:500;">09 · N-Gram Spell Correction</td>
+        <td style="padding:9px 12px; color:var(--c5);">N-Grams</td>
+        <td style="padding:9px 12px; font-family:'DM Mono',monospace; font-size:11px;">NLTK + difflib</td>
+        <td style="padding:9px 12px;">⬛⬛⬜⬜</td>
+        <td style="padding:9px 12px; color:var(--muted);">Topic 08</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<footer>
+  NLP Module 2 · Coding Topics Map &nbsp;·&nbsp; MTech Program &nbsp;·&nbsp; Click category pills to filter cards
+</footer>
+
+<script>
+  const btns  = document.querySelectorAll('.filter-btn');
+  const cards = document.querySelectorAll('.card');
+  let active  = new Set(['c1','c2','c3','c4','c5']);
+
+  btns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const cat = btn.dataset.cat;
+      if (active.has(cat)) {
+        if (active.size === 1) return;
+        active.delete(cat);
+        btn.classList.remove('active');
+      } else {
+        active.add(cat);
+        btn.classList.add('active');
+      }
+      cards.forEach(card => {
+        card.classList.toggle('hidden', !active.has(card.dataset.cat));
+      });
+    });
+  });
+</script>
+</body>
+</html>

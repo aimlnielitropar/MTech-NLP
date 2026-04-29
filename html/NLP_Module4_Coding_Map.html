@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NLP Module 4 — Semantics, WSD & Lexical Relations</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@400;500;600&family=Lato:wght@300;400;700&display=swap');
+
+:root {
+  --bg:       #0e1117;
+  --surface:  #161b27;
+  --surface2: #1e2535;
+  --border:   #2a3348;
+  --text:     #e2e8f4;
+  --muted:    #7a8aaa;
+  --dim:      #3d4f6e;
+
+  --attach:  #c97d2e;   /* Phrase Attachment — warm gold */
+  --lexrel:  #3a8fcc;   /* Lexical Relations — cobalt */
+  --homopoly:#7c5aa8;   /* Homonymy/Polysemy — violet */
+  --wsd:     #2d9e6b;   /* WSD — emerald */
+  --ml:      #d04a4a;   /* ML approach — crimson */
+}
+
+*, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+html { scroll-behavior:smooth; }
+
+body {
+  font-family: 'Lato', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+}
+
+/* Star-field grid */
+body::before {
+  content:'';
+  position:fixed; inset:0;
+  background-image:
+    radial-gradient(1px 1px at 20% 30%, rgba(196,149,46,0.15) 0%, transparent 100%),
+    radial-gradient(1px 1px at 80% 70%, rgba(58,143,204,0.12) 0%, transparent 100%),
+    linear-gradient(rgba(42,51,72,0.2) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(42,51,72,0.2) 1px, transparent 1px);
+  background-size: 100% 100%, 100% 100%, 48px 48px, 48px 48px;
+  pointer-events:none; z-index:0;
+}
+
+/* ─── HERO ─── */
+.hero {
+  position:relative; z-index:1;
+  padding: 60px 56px 52px;
+  border-bottom: 1px solid var(--border);
+  max-width:1200px; margin:0 auto;
+}
+
+.hero-badge {
+  font-family:'JetBrains Mono',monospace;
+  font-size:10px; letter-spacing:3px; color:var(--muted);
+  text-transform:uppercase; margin-bottom:20px;
+  display:flex; align-items:center; gap:12px;
+}
+.hero-badge::before {
+  content:''; display:block; width:28px; height:1px; background:var(--attach);
+}
+
+.hero h1 {
+  font-family:'Libre Baskerville',serif;
+  font-size:clamp(32px,5vw,62px);
+  font-weight:700; line-height:1.05;
+  color:var(--text); margin-bottom:18px;
+}
+.hero h1 em { font-style:italic; color:var(--attach); }
+.hero h1 span { color:var(--lexrel); }
+
+.hero-sub {
+  font-size:15px; color:var(--muted);
+  max-width:640px; line-height:1.75; margin-bottom:32px;
+}
+
+.hero-kpis { display:flex; gap:20px; flex-wrap:wrap; margin-bottom:28px; }
+.kpi {
+  border:1px solid var(--border); border-radius:6px;
+  padding:10px 20px; background:var(--surface);
+}
+.kpi .n {
+  font-family:'Libre Baskerville',serif;
+  font-size:28px; font-weight:700; line-height:1;
+}
+.kpi .l {
+  font-family:'JetBrains Mono',monospace;
+  font-size:9px; letter-spacing:2px; color:var(--muted); text-transform:uppercase;
+}
+.kpi.k1 .n { color:var(--attach); }
+.kpi.k2 .n { color:var(--lexrel); }
+.kpi.k3 .n { color:var(--wsd); }
+
+.refs { display:flex; flex-wrap:wrap; gap:8px; }
+.ref {
+  font-family:'JetBrains Mono',monospace; font-size:10px;
+  padding:4px 12px; border-radius:3px;
+  background:rgba(255,255,255,0.04); color:var(--muted);
+  border:1px solid var(--border);
+}
+.ref.hot { background:rgba(201,125,46,0.1); color:var(--attach); border-color:rgba(201,125,46,0.2); }
+
+/* ─── STICKY NAV ─── */
+.nav {
+  position:sticky; top:0; z-index:100;
+  background:rgba(14,17,23,0.95); backdrop-filter:blur(8px);
+  border-bottom:1px solid var(--border);
+  padding:10px 56px;
+  display:flex; flex-wrap:wrap; gap:7px; align-items:center;
+}
+.nl { font-family:'JetBrains Mono',monospace; font-size:9px; letter-spacing:2px; color:var(--dim); text-transform:uppercase; margin-right:4px; }
+
+.chip {
+  font-family:'JetBrains Mono',monospace; font-size:10px;
+  padding:5px 13px; border-radius:3px;
+  border:1px solid var(--border); background:transparent;
+  color:var(--muted); cursor:pointer; transition:all 0.14s;
+}
+.chip:hover { border-color:var(--text); color:var(--text); }
+.chip.on.ca { background:var(--attach); border-color:var(--attach); color:#000; }
+.chip.on.cl { background:var(--lexrel); border-color:var(--lexrel); color:#fff; }
+.chip.on.ch { background:var(--homopoly); border-color:var(--homopoly); color:#fff; }
+.chip.on.cw { background:var(--wsd); border-color:var(--wsd); color:#fff; }
+.chip.on.cm { background:var(--ml); border-color:var(--ml); color:#fff; }
+
+/* ─── MAIN ─── */
+.main { max-width:1200px; margin:0 auto; padding:0 56px 80px; position:relative; z-index:1; }
+
+/* ─── SECTION ─── */
+.section { margin-top:52px; }
+.sec-head {
+  display:flex; align-items:center; gap:16px; flex-wrap:wrap;
+  padding-bottom:14px; border-bottom:1px solid var(--border);
+  margin-bottom:20px;
+}
+.sec-pill {
+  font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:600;
+  padding:4px 13px; border-radius:3px; letter-spacing:2px; text-transform:uppercase;
+}
+.sa .sec-pill { background:rgba(201,125,46,0.12); color:var(--attach); }
+.sl .sec-pill { background:rgba(58,143,204,0.12); color:var(--lexrel); }
+.sh .sec-pill { background:rgba(124,90,168,0.12); color:var(--homopoly); }
+.sw .sec-pill { background:rgba(45,158,107,0.12); color:var(--wsd); }
+.sm .sec-pill { background:rgba(208,74,74,0.12); color:var(--ml); }
+
+.sec-title { font-family:'Libre Baskerville',serif; font-size:20px; font-weight:700; color:var(--text); }
+.sec-count { margin-left:auto; font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--dim); }
+
+/* ─── CARD ─── */
+.grid { display:grid; gap:14px; }
+
+.card {
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:8px; overflow:hidden;
+  display:grid; grid-template-columns: 64px 1fr 1fr 0.85fr;
+  position:relative;
+  transition:transform 0.16s, border-color 0.16s, opacity 0.18s;
+}
+.card::after {
+  content:''; position:absolute; top:0; left:64px; right:0; height:2px;
+}
+.card:hover { transform:translateY(-2px); border-color:var(--dim); }
+.card.hidden { opacity:0.06; pointer-events:none; }
+
+.cat-attach  .card::after { background:var(--attach); }
+.cat-lexrel  .card::after { background:var(--lexrel); }
+.cat-homo    .card::after { background:var(--homopoly); }
+.cat-wsd     .card::after { background:var(--wsd); }
+.cat-ml      .card::after { background:var(--ml); }
+
+/* For direct card children */
+.card.cat-attach::after  { background:var(--attach); }
+.card.cat-lexrel::after  { background:var(--lexrel); }
+.card.cat-homo::after    { background:var(--homopoly); }
+.card.cat-wsd::after     { background:var(--wsd); }
+.card.cat-ml::after      { background:var(--ml); }
+
+.snum {
+  display:flex; flex-direction:column; align-items:center;
+  justify-content:center; padding:16px 4px; text-align:center;
+}
+.sn { font-family:'Libre Baskerville',serif; font-size:28px; font-weight:700; line-height:1; }
+.sl2 { font-family:'JetBrains Mono',monospace; font-size:8px; letter-spacing:2px; text-transform:uppercase; margin-top:2px; color:var(--dim); }
+
+.card.cat-attach .snum { background:rgba(201,125,46,0.06); }
+.card.cat-lexrel .snum { background:rgba(58,143,204,0.06); }
+.card.cat-homo   .snum { background:rgba(124,90,168,0.06); }
+.card.cat-wsd    .snum { background:rgba(45,158,107,0.06); }
+.card.cat-ml     .snum { background:rgba(208,74,74,0.06); }
+
+.card.cat-attach .sn { color:var(--attach); }
+.card.cat-lexrel .sn { color:var(--lexrel); }
+.card.cat-homo   .sn { color:var(--homopoly); }
+.card.cat-wsd    .sn { color:var(--wsd); }
+.card.cat-ml     .sn { color:var(--ml); }
+
+.col { padding:16px 14px; border-left:1px solid var(--border); }
+.clabel { font-family:'JetBrains Mono',monospace; font-size:8px; letter-spacing:2px; text-transform:uppercase; color:var(--dim); margin-bottom:6px; }
+.ctitle { font-family:'Libre Baskerville',serif; font-size:15px; font-weight:700; color:var(--text); line-height:1.35; margin-bottom:7px; }
+.topics { list-style:none; }
+.topics li { font-size:12px; color:var(--muted); padding:2px 0; display:flex; gap:6px; line-height:1.5; }
+.topics li::before { content:'›'; color:var(--dim); font-size:11px; flex-shrink:0; }
+
+.libs { display:flex; flex-wrap:wrap; gap:4px; margin-bottom:7px; }
+.lib { font-family:'JetBrains Mono',monospace; font-size:9px; padding:2px 7px; border-radius:2px; background:var(--surface2); border:1px solid var(--border); color:var(--muted); }
+
+.desc { font-size:12px; color:var(--muted); line-height:1.6; }
+.diff { font-family:'JetBrains Mono',monospace; font-size:9px; color:var(--dim); margin-top:5px; }
+
+.htags { display:flex; flex-wrap:wrap; gap:4px; margin-top:6px; }
+.htag { font-family:'JetBrains Mono',monospace; font-size:9px; padding:2px 7px; border-radius:2px; font-weight:500; }
+.card.cat-attach .htag { background:rgba(201,125,46,0.1); color:var(--attach); }
+.card.cat-lexrel .htag { background:rgba(58,143,204,0.1); color:var(--lexrel); }
+.card.cat-homo   .htag { background:rgba(124,90,168,0.1); color:var(--homopoly); }
+.card.cat-wsd    .htag { background:rgba(45,158,107,0.1); color:var(--wsd); }
+.card.cat-ml     .htag { background:rgba(208,74,74,0.1); color:var(--ml); }
+
+/* ─── TIMELINE ─── */
+.timeline-section {
+  max-width:1200px; margin:60px auto 0; padding:40px 56px;
+  background:var(--surface); border:1px solid var(--border); border-radius:8px;
+  position:relative; z-index:1;
+}
+.timeline-section h2 { font-family:'Libre Baskerville',serif; font-size:18px; font-style:italic; color:var(--muted); margin-bottom:28px; }
+.tl { position:relative; }
+.tl-spine { position:absolute; left:70px; top:0; bottom:0; width:1px; background:linear-gradient(to bottom, var(--attach), var(--lexrel), var(--wsd)); opacity:0.25; }
+.tl-item { display:flex; gap:0; margin-bottom:18px; align-items:flex-start; }
+.tl-yr { font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:600; color:var(--dim); width:58px; flex-shrink:0; padding-top:2px; text-align:right; padding-right:14px; }
+.tl-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; margin-top:3px; margin-right:16px; }
+.tl-a .tl-dot { background:var(--attach); box-shadow:0 0 6px var(--attach); }
+.tl-l .tl-dot { background:var(--lexrel); box-shadow:0 0 6px var(--lexrel); }
+.tl-w .tl-dot { background:var(--wsd); box-shadow:0 0 6px var(--wsd); }
+.tl-m .tl-dot { background:var(--ml); box-shadow:0 0 6px var(--ml); }
+.tl-t { font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:600; color:var(--text); margin-bottom:2px; }
+.tl-d { font-size:12px; color:var(--muted); line-height:1.5; }
+
+/* ─── TABLE ─── */
+.table-section { max-width:1200px; margin:40px auto 0; padding:0 56px 80px; position:relative; z-index:1; }
+.table-section h2 { font-family:'Libre Baskerville',serif; font-size:18px; font-style:italic; color:var(--muted); margin-bottom:20px; }
+table.seq { width:100%; border-collapse:collapse; font-size:12px; }
+table.seq thead tr { border-bottom:1px solid var(--border); }
+table.seq th { font-family:'JetBrains Mono',monospace; font-size:8.5px; letter-spacing:2px; text-transform:uppercase; color:var(--dim); padding:8px 10px; text-align:left; }
+table.seq td { padding:9px 10px; border-bottom:1px solid var(--border); color:var(--muted); vertical-align:top; }
+table.seq tr:hover td { background:rgba(255,255,255,0.015); }
+table.seq td:first-child { font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--text); font-weight:600; }
+.r-attach td:first-child { border-left:2px solid var(--attach); }
+.r-lexrel td:first-child { border-left:2px solid var(--lexrel); }
+.r-homo   td:first-child { border-left:2px solid var(--homopoly); }
+.r-wsd    td:first-child { border-left:2px solid var(--wsd); }
+.r-ml     td:first-child { border-left:2px solid var(--ml); }
+
+footer { border-top:1px solid var(--border); padding:22px 56px; max-width:1200px; margin:0 auto; display:flex; justify-content:space-between; flex-wrap:wrap; gap:10px; position:relative; z-index:1; }
+footer span { font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--dim); letter-spacing:1px; }
+</style>
+</head>
+<body>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-badge">MTech NLP · Module 4 · Coding Topics Map</div>
+  <h1>Semantics, <em>Lexical Relations</em><br>& <span>Word Sense Disambiguation</span></h1>
+  <p class="hero-sub">Module 4 coding outline: from phrase attachment analysis and WordNet-based lexical relations to homonymy/polysemy, robust WSD systems, and machine-learning approaches — grounded in Allen (1994), Mitchell (1997) and Cover & Thomas information theory.</p>
+  <div class="hero-kpis">
+    <div class="kpi k1"><div class="n">9</div><div class="l">Coding Topics</div></div>
+    <div class="kpi k2"><div class="n">5</div><div class="l">Categories</div></div>
+    <div class="kpi k3"><div class="n">2</div><div class="l">Colab Notebooks</div></div>
+  </div>
+  <div class="refs">
+    <span class="ref hot">Allen 1994 — NLU</span>
+    <span class="ref">Mitchell 1997 — ML</span>
+    <span class="ref">Cover & Thomas — Info Theory</span>
+    <span class="ref">WordNet (Miller 1995)</span>
+    <span class="ref">Lesk 1986 — WSD</span>
+    <span class="ref">Yarowsky 1995 — WSD</span>
+  </div>
+</div>
+
+<!-- FILTER NAV -->
+<div class="nav">
+  <span class="nl">Filter →</span>
+  <button class="chip ca on" data-cat="cat-attach">◈ Phrase Attachment</button>
+  <button class="chip cl on" data-cat="cat-lexrel">◈ Lexical Relations</button>
+  <button class="chip ch on" data-cat="cat-homo">◈ Homonymy & Polysemy</button>
+  <button class="chip cw on" data-cat="cat-wsd">◈ WSD Algorithms</button>
+  <button class="chip cm on" data-cat="cat-ml">◈ ML & Dictionary WSD</button>
+</div>
+
+<div class="main">
+
+<!-- ══ SECTION 1: PHRASE ATTACHMENT ══ -->
+<div class="section sa">
+  <div class="sec-head">
+    <span class="sec-pill">Phrase Attachment</span>
+    <span class="sec-title">Structural Ambiguity in NP / VP / PP</span>
+    <span class="sec-count">Topics 1 – 2</span>
+  </div>
+  <div class="grid">
+
+    <div class="card cat-attach" data-cat="cat-attach">
+      <div class="snum"><div class="sn">01</div><div class="sl2">Topic</div></div>
+      <div class="col">
+        <div class="clabel">Theory + Code</div>
+        <div class="ctitle">Phrase Attachment Ambiguity Analysis</div>
+        <ul class="topics">
+          <li>NP / VP / PP attachment ambiguity in fragment sentences</li>
+          <li>PP attachment problem: "I saw the man with the telescope"</li>
+          <li>Coordinating multiple attachments: noun phrase fragments</li>
+          <li>Allen (1994) Chapter 4 — attachment & semantic interpretation</li>
+          <li>Hindle & Rooth (1993) lexical association scores for PP attachment</li>
+        </ul>
+      </div>
+      <div class="col">
+        <div class="clabel">Libraries & Approach</div>
+        <div class="libs"><span class="lib">nltk</span><span class="lib">spacy</span><span class="lib">numpy</span></div>
+        <div class="desc">Build a corpus-based PP attachment classifier using lexical association (Hindle & Rooth method). Count verb-PP vs noun-PP attachments in corpus. Visualise attachment preferences and decision boundaries.</div>
+        <div class="diff">⬛⬛⬜⬜ Intermediate</div>
+      </div>
+      <div class="col">
+        <div class="clabel">References + Interview</div>
+        <div class="htags">
+          <span class="htag">Allen Ch.4</span><span class="htag">PP attachment</span>
+          <span class="htag">Hindle & Rooth 1993</span><span class="htag">Structural ambiguity</span>
+        </div>
+        <div class="desc" style="margin-top:8px">Classic NLP benchmark — PP attachment was a major research problem 1987–2000. Still relevant for low-resource languages without neural parsers.</div>
+      </div>
+    </div>
+
+    <div class="card cat-attach" data-cat="cat-attach">
+      <div class="snum"><div class="sn">02</div><div class="sl2">Topic</div></div>
+      <div class="col">
+        <div class="clabel">Theory + Code</div>
+        <div class="ctitle">Fragment Parsing: NP, VP & PP Chunks</div>
+        <ul class="topics">
+          <li>Sentence fragments and partial parses (Allen 1994 §4.2)</li>
+          <li>NLTK RegexpParser for NP/VP/PP chunking</li>
+          <li>IOB labelling: Inside-Outside-Begin scheme</li>
+          <li>spaCy noun_chunks and verb phrase extraction</li>
+          <li>Comparing chunking vs full parsing accuracy</li>
+        </ul>
+      </div>
+      <div class="col">
+        <div class="clabel">Libraries & Approach</div>
+        <div class="libs"><span class="lib">nltk</span><span class="lib">spacy</span><span class="lib">sklearn</span></div>
+        <div class="desc">Write RegexpParser grammars for NP, VP, PP chunks. Apply to news corpus. Compare IOB accuracy against CoNLL-2000 baseline. Show how fragment parsing feeds downstream semantic analysis.</div>
+        <div class="diff">⬛⬛⬜⬜ Intermediate</div>
+      </div>
+      <div class="col">
+        <div class="clabel">References + Interview</div>
+        <div class="htags">
+          <span class="htag">IOB scheme</span><span class="htag">Chunking vs parsing</span>
+          <span class="htag">Fragment semantics</span><span class="htag">CoNLL-2000</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══ SECTION 2: LEXICAL RELATIONS ══ -->
+<div class="section sl">
+  <div class="sec-head">
+    <span class="sec-pill">Lexical Relations</span>
+    <span class="sec-title">Relations Among Lexemes & Their Senses</span>
+    <span class="sec-count">Topics 3 – 4</span>
+  </div>
+  <div class="grid">
+
+    <div class="card cat-lexrel" data-cat="cat-lexrel">
+      <div class="snum"><div class="sn">03</div><div class="sl2">Topic</div></div>
+      <div class="col">
+        <div class="clabel">Theory + Code</div>
+        <div class="ctitle">WordNet: Synsets, Hypernyms & Lexical Relations</div>
+        <ul class="topics">
+          <li>WordNet (Miller 1995) — synonym sets, lexical relations</li>
+          <li>Synsets: synonymy, hypernymy, hyponymy, meronymy, holonymy</li>
+          <li>Antonymy and entailment in verbs</li>
+          <li>Traversing the WordNet hierarchy: lowest common hypernym</li>
+          <li>Semantic similarity: path similarity, Wu-Palmer, Leacock-Chodorow</li>
+        </ul>
+      </div>
+      <div class="col">
+        <div class="clabel">Libraries & Approach</div>
+        <div class="libs"><span class="lib">nltk.corpus.wordnet</span><span class="lib">matplotlib</span></div>
+        <div class="desc">Explore WordNet synsets for polysemous words. Traverse hypernym chains. Compute all similarity measures. Visualise the noun hierarchy as a tree. Build a semantic similarity scorer for word pairs.</div>
+        <div class="diff">⬛⬜⬜⬜ Beginner</div>
+      </div>
+      <div class="col">
+        <div class="clabel">References + Interview</div>
+        <div class="htags">
+          <span class="htag">Miller 1995 WordNet</span><span class="htag">Synset</span>
+          <span class="htag">Wu-Palmer sim</span><span class="htag">Hypernymy</span>
+          <span class="htag">Allen Ch.7</span>
+        </div>
+        <div class="desc" style="margin-top:8px">WordNet underpins NLTK's semantic toolkit. Understanding synsets is prerequisite for WSD, semantic similarity, and ontology-based NLP.</div>
+      </div>
+    </div>
+
+    <div class="card cat-lexrel" data-cat="cat-lexrel">
+      <div class="snum"><div class="sn">04</div><div class="sl2">Topic</div></div>
+      <div class="col">
+        <div class="clabel">Theory + Code</div>
+        <div class="ctitle">Distributional Semantics & Word Vectors</div>
+        <ul class="topics">
+          <li>Distributional hypothesis: "a word is known by the company it keeps" (Firth 1957)</li>
+          <li>Co-occurrence matrix construction from corpus</li>
+          <li>PMI (Pointwise Mutual Information) — Cover & Thomas §2.3</li>
+          <li>TF-IDF as a distributional similarity baseline</li>
+          <li>Cosine similarity for word vector comparison</li>
+        </ul>
+      </div>
+      <div class="col">
+        <div class="clabel">Libraries & Approach</div>
+        <div class="libs"><span class="lib">numpy</span><span class="lib">sklearn</span><span class="lib">scipy</span></div>
+        <div class="desc">Build a co-occurrence matrix from Brown Corpus. Compute PMI-weighted vectors. Find nearest neighbours by cosine similarity. Contrast distributional similarity vs WordNet path similarity for same word pairs.</div>
+        <div class="diff">⬛⬛⬜⬜ Intermediate</div>
+      </div>
+      <div class="col">
+        <div class="clabel">References + Interview</div>
+        <div class="htags">
+          <span class="htag">PMI (Cover & Thomas)</span><span class="htag">Distributional hyp.</span>
+          <span class="htag">Co-occurrence matrix</span><span class="htag">Cosine similarity</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══ SECTION 3: HOMONYMY & POLYSEMY ══ -->
+<div class="section sh">
+  <div class="sec-head">
+    <span class="sec-pill">Homonymy & Polysemy</span>
+    <span class="sec-title">Disambiguation, Limitations & Robust WSD</span>
+    <span class="sec-count">Topics 5 – 6</span>
+  </div>
+  <div class="grid">
+
+    <div class="card cat-homo" data-cat="cat-homo">
+      <div class="snum"><div class="sn">05</div><div class="sl2">Topic</div></div>
+      <div class="col">
+        <div class="clabel">Theory + Code</div>
+        <div class="ctitle">Homonymy vs Polysemy: Detection & Analysis</div>
+        <ul class="topics">
+          <li>Homonymy: bank (river) vs bank (financial) — unrelated meanings</li>
+          <li>Polysemy: window (glass pane) vs window (GUI widget) — related meanings</li>
+          <li>Monosemy: words with a single sense</li>
+          <li>WordNet synset count as polysemy proxy</li>
+          <li>Semantic relatedness test: cross-sense similarity</li>
+        </ul>
+      </div>
+      <div class="col">
+        <div class="clabel">Libraries & Approach</div>
+        <div class="libs"><span class="lib">nltk.wordnet</span><span class="lib">matplotlib</span><span class="lib">pandas</span></div>
+        <div class="desc">Analyse synset count distributions in WordNet. Classify words as homonymous vs polysemous using inter-synset similarity threshold. Plot polysemy vs word frequency. Show limitations of naive synset counting.</div>
+        <div class="diff">⬛⬜⬜⬜ Beginner</div>
+      </div>
+      <div class="col">
+        <div class="clabel">References + Interview</div>
+        <div class="htags">
+          <span class="htag">Homonymy vs polysemy</span><span class="htag">Sense granularity</span>
+          <span class="htag">Allen Ch.7 §7.2</span><span class="htag">Fine vs coarse WSD</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card cat-homo" data-cat="cat-homo">
+      <div class="snum"><div class="sn">06</div><div class="sl2">Topic</div></div>
+      <div class="col">
+        <div class="clabel">Theory + Code</div>
+        <div class="ctitle">Limitations of WSD & Sense Granularity</div>
+        <ul class="topics">
+          <li>Sense enumeration problem: where do senses stop?</li>
+          <li>Inter-annotator agreement (ITA) on WSD tasks</li>
+          <li>SemEval WSD tasks — benchmark history</li>
+          <li>Coarse vs fine-grained sense inventories</li>
+          <li>The "most frequent sense" (MFS) baseline — surprisingly strong</li>
+        </ul>
+      </div>
+      <div class="col">
+        <div class="clabel">Libraries & Approach</div>
+        <div class="libs"><span class="lib">nltk</span><span class="lib">pandas</span><span class="lib">seaborn</span></div>
+        <div class="desc">Compute MFS baseline on a word sample. Measure how often MFS is correct. Simulate ITA disagreement. Show that WSD accuracy depends heavily on sense granularity — coarser = easier. Discuss SemEval evaluation methodology.</div>
+        <div class="diff">⬛⬛⬜⬜ Intermediate</div>
+      </div>
+      <div class="col">
+        <div class="clabel">References + Interview</div>
+        <div class="htags">
+          <span class="htag">MFS baseline</span><span class="htag">SemEval</span>
+          <span class="htag">ITA in WSD</span><span class="htag">Sense inventory</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══ SECTION 4: WSD ALGORITHMS ══ -->
+<div class="section sw">
+  <div class="sec-head">
+    <span class="sec-pill">WSD Algorithms</span>
+    <span class="sec-title">Dictionary-Based & Corpus-Based Robust WSD</span>
+    <span class="sec-count">Topics 7 – 8</span>
+  </div>
+  <div class="grid">
+
+    <div class="card cat-wsd" data-cat="cat-wsd">
+      <div class="snum"><div class="sn">07</div><div class="sl2">Topic</div></div>
+      <div class="col">
+        <div class="clabel">Theory + Code</div>
+        <div class="ctitle">Lesk Algorithm & Dictionary-Based WSD</div>
+        <ul class="topics">
+          <li>Lesk (1986): sense = definition with most overlap with context</li>
+          <li>Simplified Lesk vs Extended Lesk (Banerjee & Pedersen 2002)</li>
+          <li>WordNet gloss overlap counting</li>
+          <li>Context window size effect on accuracy</li>
+          <li>Evaluation against SemEval gold annotations</li>
+        </ul>
+      </div>
+      <div class="col">
+        <div class="clabel">Libraries & Approach</div>
+        <div class="libs"><span class="lib">nltk.wordnet</span><span class="lib">nltk</span><span class="lib">numpy</span></div>
+        <div class="desc">Implement Simplified Lesk from scratch. Implement Extended Lesk (using gloss + examples + hypernym glosses). Evaluate on a set of target words with known senses. Compare window sizes. Visualise overlap scores per sense.</div>
+        <div class="diff">⬛⬛⬜⬜ Intermediate</div>
+      </div>
+      <div class="col">
+        <div class="clabel">References + Interview</div>
+        <div class="htags">
+          <span class="htag">Lesk 1986</span><span class="htag">Gloss overlap</span>
+          <span class="htag">Dictionary-based</span><span class="htag">Extended Lesk</span>
+          <span class="htag">Allen Ch.7</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card cat-wsd" data-cat="cat-wsd">
+      <div class="snum"><div class="sn">08</div><div class="sl2">Topic</div></div>
+      <div class="col">
+        <div class="clabel">Theory + Code</div>
+        <div class="ctitle">Yarowsky's Bootstrapping & One-Sense-Per-Discourse</div>
+        <ul class="topics">
+          <li>Yarowsky (1995): unsupervised WSD with seed words</li>
+          <li>"One sense per collocation" and "one sense per discourse" principles</li>
+          <li>Decision list learning from collocations</li>
+          <li>Log-likelihood ratio for feature selection (Cover & Thomas §2)</li>
+          <li>Information gain — Mitchell (1997) Ch. 3</li>
+        </ul>
+      </div>
+      <div class="col">
+        <div class="clabel">Libraries & Approach</div>
+        <div class="libs"><span class="lib">nltk</span><span class="lib">numpy</span><span class="lib">collections</span></div>
+        <div class="desc">Implement simplified Yarowsky-style decision list for "bank" disambiguation. Use log-likelihood ratio for feature ranking. Apply one-sense-per-discourse rule as post-processing. Measure accuracy against labeled examples.</div>
+        <div class="diff">⬛⬛⬛⬜ Advanced</div>
+      </div>
+      <div class="col">
+        <div class="clabel">References + Interview</div>
+        <div class="htags">
+          <span class="htag">Yarowsky 1995</span><span class="htag">Decision list</span>
+          <span class="htag">One-sense-per-disc</span><span class="htag">Log-likelihood</span>
+          <span class="htag">Bootstrapping</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══ SECTION 5: ML APPROACH ══ -->
+<div class="section sm">
+  <div class="sec-head">
+    <span class="sec-pill">ML & Info Theory</span>
+    <span class="sec-title">Machine Learning Approach to WSD</span>
+    <span class="sec-count">Topic 9</span>
+  </div>
+  <div class="grid">
+
+    <div class="card cat-ml" data-cat="cat-ml">
+      <div class="snum"><div class="sn">09</div><div class="sl2">Topic</div></div>
+      <div class="col">
+        <div class="clabel">Theory + Code</div>
+        <div class="ctitle">ML-Based WSD: Naive Bayes, Decision Trees & SVM</div>
+        <ul class="topics">
+          <li>WSD as supervised classification (Mitchell 1997 Ch. 6)</li>
+          <li>Feature engineering: surrounding words, POS tags, collocations</li>
+          <li>Naive Bayes for WSD (Gale, Church & Yarowsky 1992)</li>
+          <li>Decision tree features (Mitchell 1997 Ch. 3) — information gain</li>
+          <li>SVM + TF-IDF features for context-window classification</li>
+          <li>Information theoretic measures: entropy, mutual information (Cover & Thomas)</li>
+        </ul>
+      </div>
+      <div class="col">
+        <div class="clabel">Libraries & Approach</div>
+        <div class="libs"><span class="lib">sklearn</span><span class="lib">nltk</span><span class="lib">numpy</span><span class="lib">pandas</span><span class="lib">matplotlib</span></div>
+        <div class="desc">Supervised WSD on SemCor corpus samples for "bank" and "plant". Feature extraction pipeline: context window words, POS tags, local collocations. Compare NB vs Decision Tree vs SVM. Feature importance analysis. Cross-validation evaluation.</div>
+        <div class="diff">⬛⬛⬛⬜ Advanced</div>
+      </div>
+      <div class="col">
+        <div class="clabel">References + Interview</div>
+        <div class="htags">
+          <span class="htag">Mitchell Ch.3,6</span><span class="htag">Cover & Thomas</span>
+          <span class="htag">Gale et al. 1992</span><span class="htag">Information gain</span>
+          <span class="htag">Supervised WSD</span><span class="htag">SemCor</span>
+        </div>
+        <div class="desc" style="margin-top:8px">Connects Module 3 ML (SVM, DT) to semantic NLP. Mitchell Ch. 3 decision trees + Ch. 6 Naive Bayes directly apply here.</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+</div><!-- /main -->
+
+<!-- TIMELINE -->
+<div class="timeline-section">
+  <h2>// Semantics & WSD — Historical Timeline</h2>
+  <div class="tl">
+    <div class="tl-spine"></div>
+    <div class="tl-item tl-a"><div class="tl-yr">1957</div><div class="tl-dot"></div><div class="tl-content"><div class="tl-t">Firth — Distributional Hypothesis</div><div class="tl-d">"You shall know a word by the company it keeps." Foundation of all distributional semantics, PMI, word2vec.</div></div></div>
+    <div class="tl-item tl-l"><div class="tl-yr">1969</div><div class="tl-dot"></div><div class="tl-content"><div class="tl-t">Quillian — Semantic Networks</div><div class="tl-d">First computational lexical knowledge base. Concepts connected by IS-A, PART-OF relations. Direct ancestor of WordNet.</div></div></div>
+    <div class="tl-item tl-a"><div class="tl-yr">1986</div><div class="tl-dot"></div><div class="tl-content"><div class="tl-t">Lesk Algorithm — Dictionary-Based WSD</div><div class="tl-d">Simple but foundational: overlap between dictionary glosses determines word sense. Still a competitive baseline in 2024.</div></div></div>
+    <div class="tl-item tl-a"><div class="tl-yr">1987</div><div class="tl-dot"></div><div class="tl-content"><div class="tl-t">Hindle & Rooth — PP Attachment from Corpus</div><div class="tl-d">Statistical approach to prepositional phrase attachment using lexical association. First corpus-driven approach to structural ambiguity.</div></div></div>
+    <div class="tl-item tl-l"><div class="tl-yr">1991</div><div class="tl-dot"></div><div class="tl-content"><div class="tl-t">Miller et al. — WordNet 1.0</div><div class="tl-d">Princeton English lexical database. Synonyms grouped into synsets connected by semantic relations. Most-used NLP lexical resource, still actively maintained.</div></div></div>
+    <div class="tl-item tl-w"><div class="tl-yr">1992</div><div class="tl-dot"></div><div class="tl-content"><div class="tl-t">Gale, Church & Yarowsky — Supervised WSD</div><div class="tl-d">Naive Bayes for WSD using surrounding words as features. Established supervised WSD as a classification task. Mitchell Ch. 6 Bayes directly applies.</div></div></div>
+    <div class="tl-item tl-w"><div class="tl-yr">1994</div><div class="tl-dot"></div><div class="tl-content"><div class="tl-t">Allen — "Natural Language Understanding" textbook</div><div class="tl-d">Comprehensive treatment of attachment, lexical semantics, WSD in computational context. Core reference for this module.</div></div></div>
+    <div class="tl-item tl-w"><div class="tl-yr">1995</div><div class="tl-dot"></div><div class="tl-content"><div class="tl-t">Yarowsky — One-Sense-Per-Discourse Unsupervised WSD</div><div class="tl-d">Bootstrapping from seed collocations. Decision list with log-likelihood. 96% accuracy rivalling supervised systems. Information theory core.</div></div></div>
+    <div class="tl-item tl-m"><div class="tl-yr">1997</div><div class="tl-dot"></div><div class="tl-content"><div class="tl-t">Mitchell — Machine Learning textbook</div><div class="tl-d">Decision trees (Ch. 3) and Naive Bayes (Ch. 6) directly applicable to WSD feature classification. Information gain as splitting criterion.</div></div></div>
+    <div class="tl-item tl-m"><div class="tl-yr">2001</div><div class="tl-dot"></div><div class="tl-content"><div class="tl-t">SemEval Competitions Begin</div><div class="tl-d">Shared tasks for WSD evaluation. Established standard benchmarks. MFS baseline (~60%) proved hard to beat with classical methods.</div></div></div>
+    <div class="tl-item tl-m"><div class="tl-yr">2019</div><div class="tl-dot"></div><div class="tl-content"><div class="tl-t">BERT Contextual Embeddings — WSD solved?</div><div class="tl-d">Hadiwinoto & Ng (2019): BERT representations give ~80% F1 on all-words WSD. But classical methods still matter for low-resource and interpretable systems.</div></div></div>
+  </div>
+</div>
+
+<!-- SEQUENCE TABLE -->
+<div class="table-section">
+  <h2>// Teaching Sequence</h2>
+  <table class="seq">
+    <thead><tr><th>Topic</th><th>Category</th><th>Difficulty</th><th>Key Library</th><th>Builds On</th><th>Reference</th></tr></thead>
+    <tbody>
+      <tr class="r-attach"><td>01 — PP Attachment Analysis</td><td>Phrase Attachment</td><td>⬛⬛⬜⬜</td><td>nltk, spacy</td><td>Module 3 CFG</td><td>Allen Ch.4, Hindle & Rooth</td></tr>
+      <tr class="r-attach"><td>02 — NP/VP/PP Chunking (IOB)</td><td>Phrase Attachment</td><td>⬛⬛⬜⬜</td><td>nltk, sklearn</td><td>Topic 01</td><td>Allen Ch.4, CoNLL-2000</td></tr>
+      <tr class="r-lexrel"><td>03 — WordNet: Synsets & Similarity</td><td>Lexical Relations</td><td>⬛⬜⬜⬜</td><td>nltk.wordnet</td><td>Module 2 Morphology</td><td>Allen Ch.7, Miller 1995</td></tr>
+      <tr class="r-lexrel"><td>04 — PMI & Distributional Semantics</td><td>Lexical Relations</td><td>⬛⬛⬜⬜</td><td>numpy, sklearn</td><td>Topic 03</td><td>Cover & Thomas §2.3</td></tr>
+      <tr class="r-homo"><td>05 — Homonymy vs Polysemy Analysis</td><td>Homo/Polysemy</td><td>⬛⬜⬜⬜</td><td>nltk.wordnet</td><td>Topic 03</td><td>Allen Ch.7 §7.2</td></tr>
+      <tr class="r-homo"><td>06 — WSD Limitations & MFS Baseline</td><td>Homo/Polysemy</td><td>⬛⬛⬜⬜</td><td>nltk, pandas</td><td>Topics 03–05</td><td>Allen Ch.7, SemEval</td></tr>
+      <tr class="r-wsd"><td>07 — Lesk Algorithm (Dict-Based WSD)</td><td>WSD Algorithms</td><td>⬛⬛⬜⬜</td><td>nltk.wordnet</td><td>Topics 05–06</td><td>Lesk 1986, Allen Ch.7</td></tr>
+      <tr class="r-wsd"><td>08 — Yarowsky Decision List WSD</td><td>WSD Algorithms</td><td>⬛⬛⬛⬜</td><td>nltk, numpy</td><td>Topics 06–07</td><td>Yarowsky 1995, Cover & Thomas</td></tr>
+      <tr class="r-ml"><td>09 — ML WSD: NB + DT + SVM</td><td>ML Approach</td><td>⬛⬛⬛⬜</td><td>sklearn, nltk</td><td>All above</td><td>Mitchell Ch.3,6; Gale et al. 1992</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<footer>
+  <span>MTech NLP · Module 4 · Semantics & WSD · 9 Coding Topics</span>
+  <span>Allen 1994 · Mitchell 1997 · Cover & Thomas · Google Colab compatible</span>
+</footer>
+
+<script>
+const chips = document.querySelectorAll('.chip');
+const cards = document.querySelectorAll('.card');
+const active = new Set(['cat-attach','cat-lexrel','cat-homo','cat-wsd','cat-ml']);
+
+chips.forEach(chip => {
+  chip.addEventListener('click', () => {
+    const cat = chip.dataset.cat;
+    if (active.has(cat)) {
+      if (active.size === 1) return;
+      active.delete(cat); chip.classList.remove('on');
+    } else {
+      active.add(cat); chip.classList.add('on');
+    }
+    cards.forEach(c => c.classList.toggle('hidden', !active.has(c.dataset.cat)));
+  });
+});
+</script>
+</body>
+</html>

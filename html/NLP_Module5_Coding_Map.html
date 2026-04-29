@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NLP Module 5 — Discourse, Coreference & Text Coherence</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Roboto+Mono:wght@400;500;600&family=Nunito+Sans:wght@300;400;600;700&display=swap');
+:root{--bg:#fdf6ec;--paper:#fffdf7;--ink:#1e1810;--muted:#5c4f3a;--dim:#b0a088;--rule:#e8dcc8;--coref:#8b3a1a;--pronoun:#3a6b8b;--algo:#2e7a52;--cohere:#7a4a8b;--struct:#c47a1a;--shadow:0 2px 14px rgba(30,24,16,.09)}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}html{scroll-behavior:smooth}
+body{font-family:'Nunito Sans',sans-serif;background:var(--bg);color:var(--ink);min-height:100vh}
+body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(circle,rgba(176,160,136,.12) 1px,transparent 1px);background-size:20px 20px;pointer-events:none;z-index:0}
+.masthead{background:var(--ink);padding:56px 60px 48px;position:relative;overflow:hidden;z-index:1}
+.masthead::after{content:'M5';position:absolute;right:-10px;bottom:-50px;font-family:'Spectral',serif;font-size:300px;font-weight:700;color:rgba(255,255,255,.03);line-height:1;pointer-events:none}
+.masthead::before{content:'';position:absolute;left:0;top:0;bottom:0;width:5px;background:linear-gradient(to bottom,var(--coref),var(--pronoun),var(--cohere))}
+.mast-top{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:16px;margin-bottom:28px}
+.mast-badge{font-family:'Roboto Mono',monospace;font-size:10px;letter-spacing:3px;color:rgba(255,255,255,.3);text-transform:uppercase;border:1px solid rgba(255,255,255,.1);padding:5px 13px;border-radius:3px}
+.mast-kpis{display:flex;gap:24px}.kpi .n{font-family:'Spectral',serif;font-size:36px;font-weight:700;line-height:1}.kpi .l{font-family:'Roboto Mono',monospace;font-size:9px;letter-spacing:2px;color:rgba(255,255,255,.3);text-transform:uppercase}
+.kpi.k1 .n{color:#e8ab6a}.kpi.k2 .n{color:#7cc4e0}.kpi.k3 .n{color:#8fd4aa}
+h1{font-family:'Spectral',serif;font-size:clamp(30px,5vw,62px);font-weight:700;line-height:1.05;color:#fdf6ec;margin-bottom:14px;position:relative;z-index:1}
+h1 em{font-style:italic;color:#e8ab6a}h1 span{color:#7cc4e0}
+.mast-desc{font-size:14px;color:rgba(255,255,255,.4);max-width:640px;line-height:1.75;margin-bottom:26px}
+.ref-tags{display:flex;flex-wrap:wrap;gap:7px}.rtag{font-family:'Roboto Mono',monospace;font-size:10px;padding:4px 11px;border-radius:3px;background:rgba(255,255,255,.05);color:rgba(255,255,255,.35);border:1px solid rgba(255,255,255,.08)}
+.rtag.hot{background:rgba(232,171,106,.12);color:#e8ab6a;border-color:rgba(232,171,106,.25)}
+.filter-bar{position:sticky;top:0;z-index:100;background:rgba(253,246,236,.97);backdrop-filter:blur(8px);border-bottom:2px solid var(--rule);padding:11px 60px;display:flex;flex-wrap:wrap;gap:7px;align-items:center;box-shadow:0 2px 10px rgba(30,24,16,.07)}
+.fl{font-family:'Roboto Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--dim);text-transform:uppercase;margin-right:4px}
+.chip{font-family:'Roboto Mono',monospace;font-size:10px;font-weight:500;padding:5px 13px;border-radius:3px;border:1.5px solid var(--rule);background:transparent;color:var(--muted);cursor:pointer;transition:all .13s}
+.chip:hover{border-color:var(--ink);color:var(--ink)}
+.chip.on.cc{background:var(--coref);border-color:var(--coref);color:#fff}
+.chip.on.cp{background:var(--pronoun);border-color:var(--pronoun);color:#fff}
+.chip.on.ca{background:var(--algo);border-color:var(--algo);color:#fff}
+.chip.on.ch{background:var(--cohere);border-color:var(--cohere);color:#fff}
+.chip.on.cs{background:var(--struct);border-color:var(--struct);color:#fff}
+.wrap{max-width:1200px;margin:0 auto;padding:0 60px 80px;position:relative;z-index:1}
+.section{margin-top:52px}
+.sec-head{display:flex;align-items:center;gap:16px;flex-wrap:wrap;padding-bottom:14px;border-bottom:2px solid var(--rule);margin-bottom:20px}
+.sec-pill{font-family:'Roboto Mono',monospace;font-size:10px;font-weight:600;padding:4px 12px;border-radius:3px;letter-spacing:2px;text-transform:uppercase}
+.sc .sec-pill{background:rgba(139,58,26,.09);color:var(--coref)}
+.sp .sec-pill{background:rgba(58,107,139,.09);color:var(--pronoun)}
+.sa .sec-pill{background:rgba(46,122,82,.09);color:var(--algo)}
+.sh .sec-pill{background:rgba(122,74,139,.09);color:var(--cohere)}
+.ss2 .sec-pill{background:rgba(196,122,26,.09);color:var(--struct)}
+.sec-title{font-family:'Spectral',serif;font-size:20px;font-weight:700;color:var(--ink)}
+.sec-count{margin-left:auto;font-family:'Roboto Mono',monospace;font-size:10px;color:var(--dim)}
+.grid{display:grid;gap:13px}
+.card{background:var(--paper);border:1.5px solid var(--rule);border-radius:8px;overflow:hidden;display:grid;grid-template-columns:64px 1fr 1fr .85fr;box-shadow:var(--shadow);position:relative;transition:transform .15s,box-shadow .15s,opacity .18s}
+.card::after{content:'';position:absolute;top:0;left:64px;right:0;height:2.5px}
+.card:hover{transform:translateY(-2px);box-shadow:0 6px 22px rgba(30,24,16,.12)}
+.card.hidden{opacity:.06;pointer-events:none}
+.card.cat-coref::after{background:var(--coref)}.card.cat-pronoun::after{background:var(--pronoun)}
+.card.cat-algo::after{background:var(--algo)}.card.cat-cohere::after{background:var(--cohere)}
+.card.cat-struct::after{background:var(--struct)}
+.snum{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px 4px;text-align:center}
+.sn{font-family:'Spectral',serif;font-size:28px;font-weight:700;line-height:1}
+.sl2{font-family:'Roboto Mono',monospace;font-size:8px;letter-spacing:2px;text-transform:uppercase;margin-top:2px;color:var(--dim)}
+.card.cat-coref .snum{background:rgba(139,58,26,.06)}.card.cat-pronoun .snum{background:rgba(58,107,139,.06)}
+.card.cat-algo .snum{background:rgba(46,122,82,.06)}.card.cat-cohere .snum{background:rgba(122,74,139,.06)}
+.card.cat-struct .snum{background:rgba(196,122,26,.06)}
+.card.cat-coref .sn{color:var(--coref)}.card.cat-pronoun .sn{color:var(--pronoun)}
+.card.cat-algo .sn{color:var(--algo)}.card.cat-cohere .sn{color:var(--cohere)}.card.cat-struct .sn{color:var(--struct)}
+.col{padding:16px 14px;border-left:1px solid var(--rule)}
+.clabel{font-family:'Roboto Mono',monospace;font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--dim);margin-bottom:6px}
+.ctitle{font-family:'Spectral',serif;font-size:15px;font-weight:700;color:var(--ink);line-height:1.35;margin-bottom:7px}
+.topics{list-style:none}.topics li{font-size:12px;color:var(--muted);padding:2px 0;display:flex;gap:6px;line-height:1.5}
+.topics li::before{content:'›';color:var(--dim);font-size:11px;flex-shrink:0}
+.libs{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:7px}
+.lib{font-family:'Roboto Mono',monospace;font-size:9px;padding:2px 7px;border-radius:2px;background:var(--bg);border:1px solid var(--rule);color:var(--muted)}
+.desc{font-size:12px;color:var(--muted);line-height:1.6}.diff{font-family:'Roboto Mono',monospace;font-size:9px;color:var(--dim);margin-top:5px}
+.htags{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}.htag{font-family:'Roboto Mono',monospace;font-size:9px;padding:2px 7px;border-radius:2px;font-weight:500}
+.card.cat-coref .htag{background:rgba(139,58,26,.08);color:var(--coref)}
+.card.cat-pronoun .htag{background:rgba(58,107,139,.08);color:var(--pronoun)}
+.card.cat-algo .htag{background:rgba(46,122,82,.08);color:var(--algo)}
+.card.cat-cohere .htag{background:rgba(122,74,139,.08);color:var(--cohere)}
+.card.cat-struct .htag{background:rgba(196,122,26,.08);color:var(--struct)}
+.tl-section{background:var(--ink);padding:40px 60px;margin-top:60px;position:relative;z-index:1}
+.tl-section h2{font-family:'Spectral',serif;font-size:18px;font-style:italic;color:#fdf6ec;margin-bottom:28px}
+.tl{position:relative}.tl-spine{position:absolute;left:68px;top:0;bottom:0;width:1px;background:linear-gradient(to bottom,var(--coref),var(--pronoun),var(--cohere),var(--struct));opacity:.3}
+.tl-item{display:flex;gap:0;margin-bottom:18px;align-items:flex-start}
+.tl-yr{font-family:'Roboto Mono',monospace;font-size:10px;font-weight:600;color:rgba(255,255,255,.25);width:56px;flex-shrink:0;padding-top:2px;text-align:right;padding-right:14px}
+.tl-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:3px;margin-right:16px}
+.tc .tl-dot{background:#e8ab6a;box-shadow:0 0 6px #e8ab6a}.tp .tl-dot{background:#7cc4e0;box-shadow:0 0 6px #7cc4e0}
+.ta .tl-dot{background:#8fd4aa;box-shadow:0 0 6px #8fd4aa}.th .tl-dot{background:#c4a0e0;box-shadow:0 0 6px #c4a0e0}
+.tl-t{font-family:'Roboto Mono',monospace;font-size:11px;font-weight:600;color:#fdf6ec;margin-bottom:2px}
+.tl-d{font-size:12px;color:rgba(255,255,255,.4);line-height:1.5}
+.table-section{max-width:1200px;margin:40px auto 0;padding:0 60px 80px;position:relative;z-index:1}
+.table-section h2{font-family:'Spectral',serif;font-size:18px;font-style:italic;color:var(--muted);margin-bottom:20px}
+table.seq{width:100%;border-collapse:collapse;font-size:12px}
+table.seq thead tr{border-bottom:2px solid var(--rule)}
+table.seq th{font-family:'Roboto Mono',monospace;font-size:8.5px;letter-spacing:2px;text-transform:uppercase;color:var(--dim);padding:8px 10px;text-align:left}
+table.seq td{padding:9px 10px;border-bottom:1px solid var(--rule);color:var(--muted);vertical-align:top}
+table.seq tr:hover td{background:rgba(0,0,0,.015)}
+table.seq td:first-child{font-family:'Roboto Mono',monospace;font-size:11px;color:var(--ink);font-weight:600}
+.r-coref td:first-child{border-left:2.5px solid var(--coref)}.r-pronoun td:first-child{border-left:2.5px solid var(--pronoun)}
+.r-algo td:first-child{border-left:2.5px solid var(--algo)}.r-cohere td:first-child{border-left:2.5px solid var(--cohere)}
+.r-struct td:first-child{border-left:2.5px solid var(--struct)}
+footer{border-top:2px solid var(--rule);padding:20px 60px;max-width:1200px;margin:0 auto;display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;position:relative;z-index:1}
+footer span{font-family:'Roboto Mono',monospace;font-size:10px;letter-spacing:1px;color:var(--dim)}
+</style>
+</head>
+<body>
+<div class="masthead">
+  <div class="mast-top">
+    <div class="mast-badge">MTech NLP · Module 5 · Coding Topics Map</div>
+    <div class="mast-kpis">
+      <div class="kpi k1"><div class="n">9</div><div class="l">Topics</div></div>
+      <div class="kpi k2"><div class="n">5</div><div class="l">Categories</div></div>
+      <div class="kpi k3"><div class="n">2</div><div class="l">Notebooks</div></div>
+    </div>
+  </div>
+  <h1>Discourse <em>Reference</em><br>Resolution &amp; <span>Text Coherence</span></h1>
+  <p class="mast-desc">Module 5: coreference chains, binding constraints, Centering Theory, Hobbs' algorithm, ML-based coreference, entity grid coherence, perplexity scoring, RST &amp; TextTiling — grounded in Allen (1994), Mitchell (1997) and Cover &amp; Thomas.</p>
+  <div class="ref-tags">
+    <span class="rtag hot">Allen 1994 Ch.11,12</span>
+    <span class="rtag">Mitchell 1997</span>
+    <span class="rtag">Cover &amp; Thomas</span>
+    <span class="rtag">Hobbs 1978</span>
+    <span class="rtag">Grosz &amp; Sidner 1986</span>
+    <span class="rtag">Mann &amp; Thompson 1988</span>
+  </div>
+</div>
+<div class="filter-bar">
+  <span class="fl">Filter</span>
+  <button class="chip cc on" data-cat="cat-coref">Coreference</button>
+  <button class="chip cp on" data-cat="cat-pronoun">Pronoun Interp.</button>
+  <button class="chip ca on" data-cat="cat-algo">Resolution Algos</button>
+  <button class="chip ch on" data-cat="cat-cohere">Text Coherence</button>
+  <button class="chip cs on" data-cat="cat-struct">Discourse Structure</button>
+</div>
+<div class="wrap">
+<!-- SECTION 1 -->
+<div class="section sc">
+  <div class="sec-head"><span class="sec-pill">Coreference</span><span class="sec-title">Reference Phenomena &amp; Syntactic/Semantic Constraints</span><span class="sec-count">Topics 1–2</span></div>
+  <div class="grid">
+    <div class="card cat-coref" data-cat="cat-coref">
+      <div class="snum"><div class="sn">01</div><div class="sl2">Topic</div></div>
+      <div class="col"><div class="clabel">Theory + Code</div><div class="ctitle">Reference Phenomena &amp; Coreference Chain Detection</div><ul class="topics"><li>Referring expressions: definite NPs, pronouns, names (Allen Ch.11)</li><li>Anaphora, cataphora, exophora, bridging references</li><li>Building coreference chains: entity clusters across sentences</li><li>spaCy neural coreference + rule-based fallback</li><li>MUC, B³, CEAF evaluation metrics</li></ul></div>
+      <div class="col"><div class="clabel">Libraries</div><div class="libs"><span class="lib">spacy</span><span class="lib">nltk</span><span class="lib">numpy</span><span class="lib">networkx</span></div><div class="desc">Detect and visualise coreference chains in news text. Build entity mention graph. Evaluate against gold annotations. Compare rule-based vs neural approaches.</div><div class="diff">⬛⬛⬜⬜ Intermediate</div></div>
+      <div class="col"><div class="clabel">References</div><div class="htags"><span class="htag">Allen Ch.11</span><span class="htag">Anaphora types</span><span class="htag">MUC metric</span><span class="htag">Entity cluster</span></div><div class="desc" style="margin-top:8px">Coreference is prerequisite for QA, summarisation, and IE. OntoNotes benchmark still the standard evaluation.</div></div>
+    </div>
+    <div class="card cat-coref" data-cat="cat-coref">
+      <div class="snum"><div class="sn">02</div><div class="sl2">Topic</div></div>
+      <div class="col"><div class="clabel">Theory + Code</div><div class="ctitle">Syntactic &amp; Semantic Constraints on Coreference</div><ul class="topics"><li>Chomsky (1981) Binding Theory: Principles A, B, C</li><li>Principle A: reflexives locally bound</li><li>Principle B: pronouns free in local domain</li><li>Principle C: R-expressions free everywhere</li><li>Gender, number, animacy agreement as filters</li></ul></div>
+      <div class="col"><div class="clabel">Libraries</div><div class="libs"><span class="lib">spacy</span><span class="lib">nltk</span><span class="lib">networkx</span></div><div class="desc">Implement Binding Theory constraint checker. Filter candidate antecedents using gender/number/animacy agreement. Visualise constraint violations. Evaluate precision of constraint filtering.</div><div class="diff">⬛⬛⬜⬜ Intermediate</div></div>
+      <div class="col"><div class="clabel">References</div><div class="htags"><span class="htag">Chomsky Binding</span><span class="htag">Allen §11.2</span><span class="htag">Principles A,B,C</span><span class="htag">Agreement filters</span></div></div>
+    </div>
+  </div>
+</div>
+<!-- SECTION 2 -->
+<div class="section sp">
+  <div class="sec-head"><span class="sec-pill">Pronoun Interpretation</span><span class="sec-title">Preferences in Pronoun Interpretation</span><span class="sec-count">Topics 3–4</span></div>
+  <div class="grid">
+    <div class="card cat-pronoun" data-cat="cat-pronoun">
+      <div class="snum"><div class="sn">03</div><div class="sl2">Topic</div></div>
+      <div class="col"><div class="clabel">Theory + Code</div><div class="ctitle">Centering Theory &amp; Salience Preferences</div><ul class="topics"><li>Recency preference: most recently mentioned antecedent</li><li>Grammatical role: subject &gt; object &gt; adjunct</li><li>Centering Theory (Grosz, Joshi &amp; Weinstein 1995)</li><li>Forward-looking centers (Cf), backward-looking center (Cb)</li><li>Transition types: Continue, Retain, Shift, Rough-Shift</li></ul></div>
+      <div class="col"><div class="clabel">Libraries</div><div class="libs"><span class="lib">spacy</span><span class="lib">nltk</span><span class="lib">numpy</span></div><div class="desc">Implement Centering: compute Cf lists, identify Cb, classify discourse transitions. Show pronoun interpretation preferences align with centering transitions. Visualise entity salience.</div><div class="diff">⬛⬛⬛⬜ Advanced</div></div>
+      <div class="col"><div class="clabel">References</div><div class="htags"><span class="htag">Grosz et al. 1995</span><span class="htag">Allen §11.3</span><span class="htag">Cf/Cb centers</span><span class="htag">Transition types</span></div></div>
+    </div>
+    <div class="card cat-pronoun" data-cat="cat-pronoun">
+      <div class="snum"><div class="sn">04</div><div class="sl2">Topic</div></div>
+      <div class="col"><div class="clabel">Theory + Code</div><div class="ctitle">Gender, Animacy &amp; Pleonastic "it" Detection</div><ul class="topics"><li>Gender agreement: he/she/it/they morphological matching</li><li>Animacy hierarchy: human &gt; animate &gt; inanimate</li><li>Pleonastic "it": "It is raining" — non-referential</li><li>Naïve Bayes classifier for gender/animacy (Mitchell Ch.6)</li><li>Semantic class lookup from WordNet</li></ul></div>
+      <div class="col"><div class="clabel">Libraries</div><div class="libs"><span class="lib">spacy</span><span class="lib">sklearn</span><span class="lib">nltk</span></div><div class="desc">Build gender/animacy NP classifier. Detect pleonastic "it" with syntactic patterns. Apply Naïve Bayes (Mitchell Ch.6) for referent type classification. Evaluate on annotated examples.</div><div class="diff">⬛⬛⬜⬜ Intermediate</div></div>
+      <div class="col"><div class="clabel">References</div><div class="htags"><span class="htag">Mitchell Ch.6</span><span class="htag">Allen §11.3</span><span class="htag">Animacy hierarchy</span><span class="htag">Pleonastic it</span></div></div>
+    </div>
+  </div>
+</div>
+<!-- SECTION 3 -->
+<div class="section sa">
+  <div class="sec-head"><span class="sec-pill">Algorithms</span><span class="sec-title">Pronoun Resolution Algorithms</span><span class="sec-count">Topics 5–6</span></div>
+  <div class="grid">
+    <div class="card cat-algo" data-cat="cat-algo">
+      <div class="snum"><div class="sn">05</div><div class="sl2">Topic</div></div>
+      <div class="col"><div class="clabel">Theory + Code</div><div class="ctitle">Hobbs' Naive Algorithm for Pronoun Resolution</div><ul class="topics"><li>Hobbs (1978): left-to-right tree-traversal for pronoun binding</li><li>BFS over parse tree nodes, skip non-NP categories</li><li>Morphological filter: gender, number, person match</li><li>Application to NLTK constituency parse trees</li><li>Evaluation vs naive recency baseline</li></ul></div>
+      <div class="col"><div class="clabel">Libraries</div><div class="libs"><span class="lib">nltk</span><span class="lib">spacy</span><span class="lib">numpy</span></div><div class="desc">Implement Hobbs' tree-traversal from scratch over NLTK parse trees. Apply morphological filters. Test on example passages. Compare accuracy vs recency heuristic. Visualise traversal path on tree.</div><div class="diff">⬛⬛⬛⬜ Advanced</div></div>
+      <div class="col"><div class="clabel">References</div><div class="htags"><span class="htag">Hobbs 1978</span><span class="htag">Allen §11.4</span><span class="htag">Tree traversal</span><span class="htag">Naive algorithm</span></div><div class="desc" style="margin-top:8px">Achieves ~80% on simple pronouns. Classic baseline in every coreference system evaluation.</div></div>
+    </div>
+    <div class="card cat-algo" data-cat="cat-algo">
+      <div class="snum"><div class="sn">06</div><div class="sl2">Topic</div></div>
+      <div class="col"><div class="clabel">Theory + Code</div><div class="ctitle">ML Coreference: Feature-Based Pairwise Classifier</div><ul class="topics"><li>Soon, Ng &amp; Lim (2001): pairwise binary coreference classifier</li><li>Features: distance, string match, gender, syntactic role, animacy</li><li>Decision Tree on mention pairs (Mitchell 1997 Ch.3)</li><li>Information gain for feature selection (Cover &amp; Thomas)</li><li>Evaluation: MUC, B³, CEAF metrics</li></ul></div>
+      <div class="col"><div class="clabel">Libraries</div><div class="libs"><span class="lib">sklearn</span><span class="lib">spacy</span><span class="lib">numpy</span><span class="lib">pandas</span></div><div class="desc">Build mention-pair coreference classifier. Extract features: sentence distance, syntactic role, string similarity, agreement. Cross-validate Decision Tree and Logistic Regression. Feature importance analysis using information gain.</div><div class="diff">⬛⬛⬛⬜ Advanced</div></div>
+      <div class="col"><div class="clabel">References</div><div class="htags"><span class="htag">Soon et al. 2001</span><span class="htag">Mitchell Ch.3</span><span class="htag">Cover &amp; Thomas</span><span class="htag">Pairwise model</span></div></div>
+    </div>
+  </div>
+</div>
+<!-- SECTION 4 -->
+<div class="section sh">
+  <div class="sec-head"><span class="sec-pill">Text Coherence</span><span class="sec-title">Coherence Modelling</span><span class="sec-count">Topics 7–8</span></div>
+  <div class="grid">
+    <div class="card cat-cohere" data-cat="cat-cohere">
+      <div class="snum"><div class="sn">07</div><div class="sl2">Topic</div></div>
+      <div class="col"><div class="clabel">Theory + Code</div><div class="ctitle">Entity Grid Model of Text Coherence</div><ul class="topics"><li>Barzilay &amp; Lapata (2008): entity grid coherence model</li><li>Grid: sentences × entities, roles S/O/X/—</li><li>Transition probabilities from role sequences</li><li>Cover &amp; Thomas: entropy of transition distribution</li><li>Coherence score: discriminate coherent vs shuffled text</li></ul></div>
+      <div class="col"><div class="clabel">Libraries</div><div class="libs"><span class="lib">spacy</span><span class="lib">numpy</span><span class="lib">pandas</span><span class="lib">seaborn</span></div><div class="desc">Build entity grid from multi-sentence text. Compute entity transition probabilities. Score coherence. Compare coherent vs randomly shuffled paragraphs. Visualise grid as heatmap.</div><div class="diff">⬛⬛⬜⬜ Intermediate</div></div>
+      <div class="col"><div class="clabel">References</div><div class="htags"><span class="htag">Barzilay 2008</span><span class="htag">Allen §12.1</span><span class="htag">Entity grid</span><span class="htag">Cover &amp; Thomas</span></div></div>
+    </div>
+    <div class="card cat-cohere" data-cat="cat-cohere">
+      <div class="snum"><div class="sn">08</div><div class="sl2">Topic</div></div>
+      <div class="col"><div class="clabel">Theory + Code</div><div class="ctitle">Perplexity &amp; Lexical Coherence Scoring</div><ul class="topics"><li>Halliday &amp; Hasan (1976): lexical cohesion devices</li><li>Sentence-to-sentence semantic similarity as coherence proxy</li><li>Perplexity as coherence measure (Cover &amp; Thomas §2)</li><li>Conditional entropy H(Sₙ|Sₙ₋₁) between sentences</li><li>Sentence ordering: coherent vs shuffled discrimination</li></ul></div>
+      <div class="col"><div class="clabel">Libraries</div><div class="libs"><span class="lib">nltk</span><span class="lib">sklearn</span><span class="lib">numpy</span><span class="lib">scipy</span></div><div class="desc">Compute lexical chain density. Measure sentence cosine similarity via TF-IDF. Compute n-gram perplexity (Cover &amp; Thomas). Discriminate coherent from shuffled text. Correlate with human judgements.</div><div class="diff">⬛⬛⬜⬜ Intermediate</div></div>
+      <div class="col"><div class="clabel">References</div><div class="htags"><span class="htag">Cover &amp; Thomas §2</span><span class="htag">Allen §12.2</span><span class="htag">Perplexity</span><span class="htag">Lexical cohesion</span></div></div>
+    </div>
+  </div>
+</div>
+<!-- SECTION 5 -->
+<div class="section ss2">
+  <div class="sec-head"><span class="sec-pill">Discourse Structure</span><span class="sec-title">RST, Discourse Relations &amp; Topic Segmentation</span><span class="sec-count">Topic 9</span></div>
+  <div class="grid">
+    <div class="card cat-struct" data-cat="cat-struct">
+      <div class="snum"><div class="sn">09</div><div class="sl2">Topic</div></div>
+      <div class="col"><div class="clabel">Theory + Code</div><div class="ctitle">RST, Discourse Connectives &amp; TextTiling Segmentation</div><ul class="topics"><li>RST (Mann &amp; Thompson 1988): Elaboration, Contrast, Cause, Evidence</li><li>Discourse connective classification: causal, temporal, adversative</li><li>TextTiling (Hearst 1997): topic segmentation via lexical similarity</li><li>Grosz &amp; Sidner (1986): intentional vs attentional structure</li><li>WindowDiff evaluation metric for segmentation</li></ul></div>
+      <div class="col"><div class="clabel">Libraries</div><div class="libs"><span class="lib">nltk</span><span class="lib">sklearn</span><span class="lib">numpy</span><span class="lib">spacy</span></div><div class="desc">Classify discourse connectives into RST relation types. Implement TextTiling for topic segmentation. Build discourse relation graph. Evaluate segmentation with WindowDiff. Compare to NLTK TextTilingTokenizer.</div><div class="diff">⬛⬛⬛⬜ Advanced</div></div>
+      <div class="col"><div class="clabel">References</div><div class="htags"><span class="htag">Mann &amp; Thompson 1988</span><span class="htag">Allen §12.3</span><span class="htag">Hearst 1997</span><span class="htag">Grosz &amp; Sidner</span><span class="htag">RST relations</span></div></div>
+    </div>
+  </div>
+</div>
+</div>
+<!-- TIMELINE -->
+<div class="tl-section">
+  <h2>// Discourse &amp; Coreference Historical Timeline</h2>
+  <div class="tl"><div class="tl-spine"></div>
+    <div class="tl-item tc"><div class="tl-yr">1960s</div><div class="tl-dot"></div><div class="tl-content"><div class="tl-t">Chomsky — Generative Grammar &amp; Binding Roots</div><div class="tl-d">Syntactic structures that constrain pronoun interpretation. Formal basis for binding theory developed 1960s–1981.</div></div></div>
+    <div class="tl-item tc"><div class="tl-yr">1976</div><div class="tl-dot"></div><div class="tl-content"><div class="tl-t">Halliday &amp; Hasan — "Cohesion in English"</div><div class="tl-d">First systematic analysis of cohesion: reference, substitution, ellipsis, conjunction, lexical cohesion. Foundation of all coherence work.</div></div></div>
+    <div class="tl-item tp"><div class="tl-yr">1978</div><div class="tl-dot"></div><div class="tl-content"><div class="tl-t">Hobbs — "Resolving Pronoun References"</div><div class="tl-d">Classic tree-traversal algorithm. ~80% accuracy on simple pronouns. Still used as a baseline today.</div></div></div>
+    <div class="tl-item tc"><div class="tl-yr">1981</div><div class="tl-dot"></div><div class="tl-content"><div class="tl-t">Chomsky — Binding Theory: Principles A, B, C</div><div class="tl-d">Formal syntactic constraints on coreference. Reflexives (A), pronouns (B), R-expressions (C). Core of Module 5 syntactic constraints.</div></div></div>
+    <div class="tl-item th"><div class="tl-yr">1986</div><div class="tl-dot"></div><div class="tl-content"><div class="tl-t">Grosz &amp; Sidner — "Attention, Intentions &amp; Structure of Discourse"</div><div class="tl-d">Computational discourse theory: linguistic, intentional, attentional components. Cl 12(3). Foundation of Centering Theory.</div></div></div>
+    <div class="tl-item th"><div class="tl-yr">1988</div><div class="tl-dot"></div><div class="tl-content"><div class="tl-t">Mann &amp; Thompson — Rhetorical Structure Theory</div><div class="tl-d">RST: hierarchical trees of discourse relations. Foundational for discourse parsing and NLG.</div></div></div>
+    <div class="tl-item ta"><div class="tl-yr">1994</div><div class="tl-dot"></div><div class="tl-content"><div class="tl-t">Allen — "Natural Language Understanding" 2nd ed.</div><div class="tl-d">Ch. 11 (Reference) and Ch. 12 (Discourse) — comprehensive computational treatment. Core textbook for this module.</div></div></div>
+    <div class="tl-item ta"><div class="tl-yr">1995</div><div class="tl-dot"></div><div class="tl-content"><div class="tl-t">Grosz, Joshi &amp; Weinstein — Centering Theory</div><div class="tl-d">CL 21(2): entity salience and pronoun preferences. Cb, Cf, transition types. Unifies recency + grammatical role preferences.</div></div></div>
+    <div class="tl-item ta"><div class="tl-yr">2001</div><div class="tl-dot"></div><div class="tl-content"><div class="tl-t">Soon, Ng &amp; Lim — ML Coreference</div><div class="tl-d">Pairwise binary classifier with Decision Tree. First widely successful ML coreference approach. Mitchell Ch.3 directly applicable.</div></div></div>
+    <div class="tl-item th"><div class="tl-yr">2008</div><div class="tl-dot"></div><div class="tl-content"><div class="tl-t">Barzilay &amp; Lapata — Entity Grid Coherence</div><div class="tl-d">Entity grid with syntactic roles predicts coherence. Transition probabilities as score. TACL 2008.</div></div></div>
+    <div class="tl-item ta"><div class="tl-yr">2018+</div><div class="tl-dot"></div><div class="tl-content"><div class="tl-t">BERT End-to-End Coreference (Lee et al.)</div><div class="tl-d">Neural span scoring with BERT. 73% F1 on OntoNotes. Classical methods still important for interpretable and low-resource systems.</div></div></div>
+  </div>
+</div>
+<!-- TABLE -->
+<div class="table-section">
+  <h2>// Teaching Sequence</h2>
+  <table class="seq">
+    <thead><tr><th>Topic</th><th>Category</th><th>Difficulty</th><th>Core Library</th><th>Builds On</th><th>Reference</th></tr></thead>
+    <tbody>
+      <tr class="r-coref"><td>01 — Reference Phenomena &amp; Coref Chains</td><td>Coreference</td><td>⬛⬛⬜⬜</td><td>spacy</td><td>Module 3 parsing</td><td>Allen Ch.11</td></tr>
+      <tr class="r-coref"><td>02 — Binding Theory Constraints</td><td>Coreference</td><td>⬛⬛⬜⬜</td><td>spacy, networkx</td><td>Topic 01</td><td>Allen §11.2, Chomsky 1981</td></tr>
+      <tr class="r-pronoun"><td>03 — Centering Theory</td><td>Pronoun Interp.</td><td>⬛⬛⬛⬜</td><td>spacy, nltk</td><td>01–02</td><td>Grosz et al. 1995, Allen §11.3</td></tr>
+      <tr class="r-pronoun"><td>04 — Gender, Animacy &amp; Pleonastic It</td><td>Pronoun Interp.</td><td>⬛⬛⬜⬜</td><td>spacy, sklearn</td><td>01–03</td><td>Mitchell Ch.6, Allen §11.3</td></tr>
+      <tr class="r-algo"><td>05 — Hobbs' Algorithm</td><td>Resolution</td><td>⬛⬛⬛⬜</td><td>nltk, spacy</td><td>01–04</td><td>Hobbs 1978, Allen §11.4</td></tr>
+      <tr class="r-algo"><td>06 — ML Coreference Classifier</td><td>Resolution</td><td>⬛⬛⬛⬜</td><td>sklearn, spacy</td><td>01–05</td><td>Mitchell Ch.3, Soon et al. 2001</td></tr>
+      <tr class="r-cohere"><td>07 — Entity Grid Coherence</td><td>Text Coherence</td><td>⬛⬛⬜⬜</td><td>spacy, numpy</td><td>01–06</td><td>Allen §12.1, Barzilay 2008</td></tr>
+      <tr class="r-cohere"><td>08 — Perplexity &amp; Lexical Coherence</td><td>Text Coherence</td><td>⬛⬛⬜⬜</td><td>nltk, sklearn</td><td>07</td><td>Cover &amp; Thomas §2, Allen §12.2</td></tr>
+      <tr class="r-struct"><td>09 — RST &amp; TextTiling</td><td>Discourse Struct</td><td>⬛⬛⬛⬜</td><td>nltk, spacy</td><td>07–08</td><td>Allen §12.3, Mann &amp; Thompson 1988</td></tr>
+    </tbody>
+  </table>
+</div>
+<footer>
+  <span>MTech NLP · Module 5 · Discourse &amp; Coherence · 9 Topics</span>
+  <span>Allen 1994 · Mitchell 1997 · Cover &amp; Thomas · Hobbs 1978</span>
+</footer>
+<script>
+const chips=document.querySelectorAll('.chip'),cards=document.querySelectorAll('.card');
+const active=new Set(['cat-coref','cat-pronoun','cat-algo','cat-cohere','cat-struct']);
+chips.forEach(chip=>{chip.addEventListener('click',()=>{const cat=chip.dataset.cat;if(active.has(cat)){if(active.size===1)return;active.delete(cat);chip.classList.remove('on');}else{active.add(cat);chip.classList.add('on');}cards.forEach(c=>c.classList.toggle('hidden',!active.has(c.dataset.cat)));});});
+</script>
+</body>
+</html>

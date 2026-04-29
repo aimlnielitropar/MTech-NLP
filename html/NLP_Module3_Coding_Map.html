@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NLP Module 3 — POS Tagging & CFG Coding Map</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Fira+Code:wght@400;500;600&family=Source+Sans+3:wght@300;400;500;600&display=swap');
+
+:root {
+  --bg:       #f4f1eb;
+  --paper:    #fffefb;
+  --ink:      #1a1c14;
+  --muted:    #5a6045;
+  --dim:      #9aaa7a;
+  --rule:     #ddd8c8;
+
+  /* Category colors */
+  --pos-rule:  #2d6a4f;   /* POS rule-based — forest green */
+  --pos-stat:  #1b4332;   /* POS stochastic — deep green */
+  --pos-ml:    #40916c;   /* POS ML models — mid green */
+  --cfg-core:  #774936;   /* CFG core — terra cotta */
+  --cfg-gram:  #9c4221;   /* CFG grammar — burnt orange */
+  --parse:     #5a3e8c;   /* Parsing — indigo */
+
+  --shadow: 0 2px 12px rgba(26,28,20,0.08);
+}
+
+*, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+html { scroll-behavior:smooth; }
+
+body {
+  font-family: 'Source Sans 3', sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  min-height: 100vh;
+}
+
+/* Paper grain texture */
+body::before {
+  content:'';
+  position:fixed; inset:0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.018'/%3E%3C/svg%3E");
+  pointer-events:none; z-index:0;
+}
+
+/* ─── MASTHEAD ─── */
+.masthead {
+  background: var(--ink);
+  padding: 52px 60px 44px;
+  position:relative; overflow:hidden; z-index:1;
+}
+
+.masthead::after {
+  content: 'NLP';
+  position:absolute; right:-20px; bottom:-60px;
+  font-family:'Crimson Pro',serif;
+  font-size:280px; font-weight:700;
+  color:rgba(255,255,255,0.035);
+  line-height:1; pointer-events:none;
+}
+
+.mast-top {
+  display:flex; justify-content:space-between; align-items:flex-start;
+  flex-wrap:wrap; gap:16px; margin-bottom:28px;
+}
+
+.mast-label {
+  font-family:'Fira Code',monospace;
+  font-size:10px; letter-spacing:3px; color:rgba(255,255,255,0.3);
+  text-transform:uppercase; border:1px solid rgba(255,255,255,0.1);
+  padding:5px 12px; border-radius:3px;
+}
+
+.mast-stats { display:flex; gap:24px; }
+.mstat .n {
+  font-family:'Crimson Pro',serif;
+  font-size:36px; font-weight:700; color:#e8dfc4; line-height:1;
+}
+.mstat .l {
+  font-family:'Fira Code',monospace;
+  font-size:9px; letter-spacing:2px; color:rgba(255,255,255,0.3);
+  text-transform:uppercase;
+}
+
+h1 {
+  font-family:'Crimson Pro',serif;
+  font-size:clamp(32px,5.5vw,66px);
+  font-weight:700; line-height:1.04;
+  color:#f4f1eb; margin-bottom:14px;
+  position:relative; z-index:1;
+}
+h1 em { font-style:italic; color:#b7d58a; }
+
+.mast-desc {
+  font-size:14px; color:rgba(255,255,255,0.4);
+  max-width:600px; line-height:1.7; margin-bottom:28px;
+}
+
+.prereqs { display:flex; flex-wrap:wrap; gap:8px; }
+.prereq {
+  font-family:'Fira Code',monospace; font-size:10px;
+  padding:4px 11px; border-radius:3px;
+  background:rgba(255,255,255,0.06); color:rgba(255,255,255,0.4);
+  border:1px solid rgba(255,255,255,0.08);
+}
+.prereq.hot { background:rgba(183,213,138,0.15); color:#b7d58a; border-color:rgba(183,213,138,0.3); }
+
+/* ─── FILTER STRIP ─── */
+.filter-strip {
+  position:sticky; top:0; z-index:100;
+  background:var(--paper);
+  border-bottom:2px solid var(--rule);
+  padding:11px 60px;
+  display:flex; flex-wrap:wrap; gap:7px; align-items:center;
+  box-shadow:0 2px 10px rgba(26,28,20,0.07);
+}
+.fl { font-family:'Fira Code',monospace; font-size:9px; letter-spacing:2px; color:var(--dim); text-transform:uppercase; margin-right:4px; }
+
+.chip {
+  font-family:'Fira Code',monospace; font-size:10px; font-weight:500;
+  padding:4px 13px; border-radius:3px;
+  border:1.5px solid var(--rule); background:transparent;
+  color:var(--muted); cursor:pointer; transition:all 0.13s; letter-spacing:0.5px;
+}
+.chip:hover { border-color:var(--ink); color:var(--ink); }
+.chip.on.cr { background:var(--pos-rule); border-color:var(--pos-rule); color:#fff; }
+.chip.on.cs { background:var(--pos-stat); border-color:var(--pos-stat); color:#fff; }
+.chip.on.cm { background:var(--pos-ml);   border-color:var(--pos-ml);   color:#fff; }
+.chip.on.cc { background:var(--cfg-core); border-color:var(--cfg-core); color:#fff; }
+.chip.on.cg { background:var(--cfg-gram); border-color:var(--cfg-gram); color:#fff; }
+.chip.on.cp { background:var(--parse);    border-color:var(--parse);    color:#fff; }
+
+/* ─── MAIN ─── */
+.wrap { max-width:1180px; margin:0 auto; padding:0 60px 80px; position:relative; z-index:1; }
+
+/* ─── SECTION HEADER ─── */
+.sec {
+  margin-top:52px; padding-bottom:14px;
+  border-bottom:2px solid var(--rule);
+  display:flex; align-items:baseline; gap:16px; flex-wrap:wrap;
+}
+.sec-tag {
+  font-family:'Fira Code',monospace; font-size:10px; font-weight:600;
+  padding:4px 12px; border-radius:3px; letter-spacing:2px; text-transform:uppercase;
+}
+.sr .sec-tag { background:rgba(45,106,79,0.10); color:var(--pos-rule); }
+.ss .sec-tag { background:rgba(27,67,50,0.10); color:var(--pos-stat); }
+.sm .sec-tag { background:rgba(64,145,108,0.10); color:var(--pos-ml); }
+.sc .sec-tag { background:rgba(119,73,54,0.10); color:var(--cfg-core); }
+.sg .sec-tag { background:rgba(156,66,33,0.10); color:var(--cfg-gram); }
+.sp .sec-tag { background:rgba(90,62,140,0.10); color:var(--parse); }
+
+.sec-title { font-family:'Crimson Pro',serif; font-size:22px; font-weight:700; color:var(--ink); }
+.sec-count { margin-left:auto; font-family:'Fira Code',monospace; font-size:10px; color:var(--dim); }
+
+/* ─── CARDS ─── */
+.grid { display:grid; gap:13px; margin-top:18px; }
+
+.card {
+  background:var(--paper);
+  border:1.5px solid var(--rule);
+  border-radius:8px; overflow:hidden;
+  display:grid; grid-template-columns: 68px 1fr 1fr 0.8fr;
+  box-shadow:var(--shadow);
+  transition:transform 0.15s, box-shadow 0.15s, opacity 0.18s;
+  position:relative;
+}
+.card::before {
+  content:''; position:absolute; top:0; left:0; right:0; height:2.5px;
+}
+.card:hover { transform:translateY(-2px); box-shadow:0 6px 22px rgba(26,28,20,0.11); }
+.card.hidden { opacity:0.06; pointer-events:none; }
+
+/* top border colors */
+.cat-rule  .card::before, .cat-rule-card::before { background:var(--pos-rule); }
+.cat-stat  .card::before, .cat-stat-card::before { background:var(--pos-stat); }
+.cat-ml    .card::before, .cat-ml-card::before   { background:var(--pos-ml); }
+.cat-cfg   .card::before, .cat-cfg-card::before  { background:var(--cfg-core); }
+.cat-gram  .card::before, .cat-gram-card::before { background:var(--cfg-gram); }
+.cat-parse .card::before, .cat-parse-card::before{ background:var(--parse); }
+
+/* apply card colors */
+.card.cat-rule::before  { background:var(--pos-rule); }
+.card.cat-stat::before  { background:var(--pos-stat); }
+.card.cat-ml::before    { background:var(--pos-ml); }
+.card.cat-cfg::before   { background:var(--cfg-core); }
+.card.cat-gram::before  { background:var(--cfg-gram); }
+.card.cat-parse::before { background:var(--parse); }
+
+/* ─── CARD COLUMNS ─── */
+.snum {
+  display:flex; flex-direction:column; align-items:center;
+  justify-content:center; padding:16px 5px; text-align:center;
+}
+.sn { font-family:'Crimson Pro',serif; font-size:30px; font-weight:700; line-height:1; }
+.sl { font-family:'Fira Code',monospace; font-size:8px; letter-spacing:2px; text-transform:uppercase; margin-top:2px; }
+
+.card.cat-rule  .snum { background:rgba(45,106,79,0.07); }
+.card.cat-stat  .snum { background:rgba(27,67,50,0.07); }
+.card.cat-ml    .snum { background:rgba(64,145,108,0.07); }
+.card.cat-cfg   .snum { background:rgba(119,73,54,0.07); }
+.card.cat-gram  .snum { background:rgba(156,66,33,0.07); }
+.card.cat-parse .snum { background:rgba(90,62,140,0.07); }
+
+.card.cat-rule  .sn, .card.cat-rule  .sl { color:var(--pos-rule); }
+.card.cat-stat  .sn, .card.cat-stat  .sl { color:var(--pos-stat); }
+.card.cat-ml    .sn, .card.cat-ml    .sl { color:var(--pos-ml); }
+.card.cat-cfg   .sn, .card.cat-cfg   .sl { color:var(--cfg-core); }
+.card.cat-gram  .sn, .card.cat-gram  .sl { color:var(--cfg-gram); }
+.card.cat-parse .sn, .card.cat-parse .sl { color:var(--parse); }
+
+.col { padding:16px 15px; border-left:1px solid var(--rule); }
+.clabel {
+  font-family:'Fira Code',monospace; font-size:8px;
+  letter-spacing:2px; text-transform:uppercase; color:var(--dim); margin-bottom:6px;
+}
+.ctitle {
+  font-family:'Crimson Pro',serif; font-size:16px; font-weight:700;
+  color:var(--ink); line-height:1.3; margin-bottom:6px;
+}
+.topics { list-style:none; }
+.topics li {
+  font-size:12px; color:var(--muted); padding:2px 0;
+  display:flex; gap:6px; line-height:1.5;
+}
+.topics li::before { content:'▸'; color:var(--rule); font-size:10px; flex-shrink:0; }
+
+.tech { display:flex; flex-wrap:wrap; gap:4px; margin-bottom:8px; }
+.tb {
+  font-family:'Fira Code',monospace; font-size:9px;
+  padding:2px 7px; border-radius:2px;
+  background:var(--bg); border:1px solid var(--rule); color:var(--muted);
+}
+
+.desc { font-size:12px; color:var(--muted); line-height:1.6; margin-top:4px; }
+.diff { font-family:'Fira Code',monospace; font-size:9px; color:var(--dim); margin-top:6px; }
+
+.htags { display:flex; flex-wrap:wrap; gap:4px; margin-top:6px; }
+.htag {
+  font-family:'Fira Code',monospace; font-size:9px;
+  padding:2px 7px; border-radius:2px; font-weight:500;
+}
+.card.cat-rule  .htag { background:rgba(45,106,79,0.08);  color:var(--pos-rule); }
+.card.cat-stat  .htag { background:rgba(27,67,50,0.08);   color:var(--pos-stat); }
+.card.cat-ml    .htag { background:rgba(64,145,108,0.08); color:var(--pos-ml); }
+.card.cat-cfg   .htag { background:rgba(119,73,54,0.08);  color:var(--cfg-core); }
+.card.cat-gram  .htag { background:rgba(156,66,33,0.08);  color:var(--cfg-gram); }
+.card.cat-parse .htag { background:rgba(90,62,140,0.08);  color:var(--parse); }
+
+/* ─── TIMELINE ─── */
+.timeline-wrap {
+  background:var(--ink); padding:40px 60px; margin-top:60px;
+  position:relative; z-index:1;
+}
+.timeline-wrap h2 {
+  font-family:'Crimson Pro',serif; font-size:22px; font-weight:700;
+  font-style:italic; color:var(--bg); margin-bottom:28px;
+}
+
+.tl { position:relative; padding-left:0; }
+.tl-spine {
+  position:absolute; left:72px; top:0; bottom:0; width:1px;
+  background:linear-gradient(to bottom, var(--pos-rule), var(--cfg-core), var(--parse));
+  opacity:0.3;
+}
+.tl-item {
+  display:flex; gap:0; margin-bottom:18px; align-items:flex-start;
+}
+.tl-year {
+  font-family:'Fira Code',monospace; font-size:10px; font-weight:600;
+  color:rgba(255,255,255,0.25); width:60px; flex-shrink:0;
+  padding-top:2px; text-align:right; padding-right:14px;
+}
+.tl-dot {
+  width:9px; height:9px; border-radius:50%; flex-shrink:0;
+  margin-top:3px; margin-right:16px; border:1px solid var(--ink);
+}
+.tl-pos  .tl-dot { background:#b7d58a; box-shadow:0 0 6px #b7d58a; }
+.tl-stat .tl-dot { background:#6ee7b7; box-shadow:0 0 6px #6ee7b7; }
+.tl-cfg  .tl-dot { background:#fbbf24; box-shadow:0 0 6px #fbbf24; }
+.tl-ml   .tl-dot { background:#c084fc; box-shadow:0 0 6px #c084fc; }
+
+.tl-content {}
+.tl-t { font-family:'Fira Code',monospace; font-size:11px; font-weight:600; color:#e8dfc4; margin-bottom:2px; }
+.tl-d { font-size:12px; color:rgba(255,255,255,0.4); line-height:1.5; }
+
+/* ─── SUMMARY TABLE ─── */
+.table-wrap { margin-top:56px; }
+.table-wrap h2 {
+  font-family:'Crimson Pro',serif; font-size:20px; font-weight:700;
+  color:var(--muted); margin-bottom:20px; font-style:italic;
+}
+table.summary { width:100%; border-collapse:collapse; font-size:12px; }
+table.summary thead tr { border-bottom:2px solid var(--rule); }
+table.summary th {
+  font-family:'Fira Code',monospace; font-size:8.5px; letter-spacing:2px;
+  text-transform:uppercase; color:var(--dim); padding:8px 10px; text-align:left;
+}
+table.summary td {
+  padding:9px 10px; border-bottom:1px solid var(--rule); color:var(--muted); vertical-align:top;
+}
+table.summary tr:hover td { background:rgba(0,0,0,0.015); }
+table.summary td:first-child { font-family:'Fira Code',monospace; font-size:11px; color:var(--ink); font-weight:600; }
+
+.cat-rule-row  td:first-child { border-left:2.5px solid var(--pos-rule); }
+.cat-stat-row  td:first-child { border-left:2.5px solid var(--pos-stat); }
+.cat-ml-row    td:first-child { border-left:2.5px solid var(--pos-ml); }
+.cat-cfg-row   td:first-child { border-left:2.5px solid var(--cfg-core); }
+.cat-gram-row  td:first-child { border-left:2.5px solid var(--cfg-gram); }
+.cat-parse-row td:first-child { border-left:2.5px solid var(--parse); }
+
+footer {
+  background:var(--paper); border-top:2px solid var(--rule);
+  padding:20px 60px; display:flex; justify-content:space-between;
+  flex-wrap:wrap; gap:10px; position:relative; z-index:1;
+}
+footer span { font-family:'Fira Code',monospace; font-size:10px; letter-spacing:1px; color:var(--dim); }
+</style>
+</head>
+<body>
+
+<!-- MASTHEAD -->
+<div class="masthead">
+  <div class="mast-top">
+    <div class="mast-label">MTech NLP · Module 3 · Coding Topics Map</div>
+    <div class="mast-stats">
+      <div class="mstat"><div class="n">10</div><div class="l">Topics</div></div>
+      <div class="mstat"><div class="n">6</div><div class="l">Categories</div></div>
+      <div class="mstat"><div class="n">2</div><div class="l">Colab Notebooks</div></div>
+    </div>
+  </div>
+  <h1>POS Tagging<br>& <em>Context Free Grammars</em></h1>
+  <p class="mast-desc">Module 3 coding topics: from rule-based POS tagging to HMM/CRF stochastic methods, and from Context Free Grammars to constituency parsing. Each topic is mapped to libraries, difficulty, and NLP interview concepts.</p>
+  <div class="prereqs">
+    <span class="prereq">Module 1 (NLP Pipeline) ✓</span>
+    <span class="prereq">Module 2 (Morphology, N-Grams) ✓</span>
+    <span class="prereq hot">→ Module 3: POS + CFG</span>
+  </div>
+</div>
+
+<!-- FILTER -->
+<div class="filter-strip">
+  <span class="fl">Filter →</span>
+  <button class="chip cr on" data-cat="cat-rule">◈ Rule-Based POS</button>
+  <button class="chip cs on" data-cat="cat-stat">◈ Stochastic POS</button>
+  <button class="chip cm on" data-cat="cat-ml">◈ ML Models (HMM/CRF/SVM)</button>
+  <button class="chip cc on" data-cat="cat-cfg">◈ CFG Foundations</button>
+  <button class="chip cg on" data-cat="cat-gram">◈ Grammar Structures</button>
+  <button class="chip cp on" data-cat="cat-parse">◈ Parsing & Trees</button>
+</div>
+
+<div class="wrap">
+
+<!-- ══ SECTION 1: RULE-BASED POS ══ -->
+<div class="sec sr">
+  <span class="sec-tag">Rule-Based</span>
+  <span class="sec-title">POS Tagging — Lexical & Rule-Based Methods</span>
+  <span class="sec-count">Topics 1 – 2</span>
+</div>
+<div class="grid">
+
+  <div class="card cat-rule" data-cat="cat-rule">
+    <div class="snum"><div class="sn">01</div><div class="sl">Topic</div></div>
+    <div class="col">
+      <div class="clabel">Theory + Code</div>
+      <div class="ctitle">Penn Treebank Tagset & NLTK Rule-Based POS</div>
+      <ul class="topics">
+        <li>Penn Treebank 36-tag tagset: NN, VB, JJ, DT, IN, etc.</li>
+        <li>Default tagger, Regexp tagger, Lookup tagger</li>
+        <li>UnigramTagger, BigramTagger, TrigramTagger (backoff chain)</li>
+        <li>Accuracy evaluation on Brown Corpus</li>
+        <li>Brill Tagger: rule-learning from corpus errors</li>
+      </ul>
+    </div>
+    <div class="col">
+      <div class="clabel">Libraries & Dataset</div>
+      <div class="tech">
+        <span class="tb">nltk</span><span class="tb">spacy</span>
+        <span class="tb">Brown Corpus (NLTK)</span><span class="tb">Penn Treebank</span>
+      </div>
+      <div class="desc">Build a complete backoff tagger chain (Unigram → Bigram → Trigram → Default). Visualise Penn Treebank tag distribution. Compare accuracy across tagger levels.</div>
+      <div class="diff">⬛⬜⬜⬜ Beginner</div>
+    </div>
+    <div class="col">
+      <div class="clabel">Historical + Interview</div>
+      <div class="htags">
+        <span class="htag">PTB 36 tags</span>
+        <span class="htag">Backoff tagging</span>
+        <span class="htag">Brill 1992</span>
+        <span class="htag">Why trigram backoff?</span>
+      </div>
+      <div class="desc" style="margin-top:8px">Brown Corpus (1961) — first annotated English corpus. Penn Treebank (1993, Marcus et al.) — standard benchmark still used today.</div>
+    </div>
+  </div>
+
+  <div class="card cat-rule" data-cat="cat-rule">
+    <div class="snum"><div class="sn">02</div><div class="sl">Topic</div></div>
+    <div class="col">
+      <div class="clabel">Theory + Code</div>
+      <div class="ctitle">Multiple Tags, Unknown Words & Class-Based N-Grams</div>
+      <ul class="topics">
+        <li>Lexical ambiguity: words with multiple tags (e.g. "book", "run")</li>
+        <li>Unknown word handling: suffix rules, morphological cues</li>
+        <li>Class-based n-gram language models (Brown clustering)</li>
+        <li>Tag frequency distribution and most-likely-tag baseline</li>
+        <li>OOV rate analysis on held-out test sets</li>
+      </ul>
+    </div>
+    <div class="col">
+      <div class="clabel">Libraries & Dataset</div>
+      <div class="tech">
+        <span class="tb">nltk</span><span class="tb">collections</span>
+        <span class="tb">regex</span><span class="tb">Brown Corpus</span>
+      </div>
+      <div class="desc">Analyse tag ambiguity in Brown Corpus. Build a suffix-based unknown word tagger. Compute OOV rates at different training sizes. Plot tag distribution.</div>
+      <div class="diff">⬛⬛⬜⬜ Intermediate</div>
+    </div>
+    <div class="col">
+      <div class="clabel">Historical + Interview</div>
+      <div class="htags">
+        <span class="htag">Lexical ambiguity</span>
+        <span class="htag">Suffix heuristics</span>
+        <span class="htag">OOV rate</span>
+        <span class="htag">Hapax legomena</span>
+      </div>
+      <div class="desc" style="margin-top:8px">The unknown words problem persists into transformer era (handled by BPE/WordPiece). Understanding this motivates subword tokenisation.</div>
+    </div>
+  </div>
+
+</div><!-- /grid -->
+
+<!-- ══ SECTION 2: STOCHASTIC POS ══ -->
+<div class="sec ss">
+  <span class="sec-tag">Stochastic</span>
+  <span class="sec-title">Stochastic POS Tagging — HMM</span>
+  <span class="sec-count">Topics 3 – 4</span>
+</div>
+<div class="grid">
+
+  <div class="card cat-stat" data-cat="cat-stat">
+    <div class="snum"><div class="sn">03</div><div class="sl">Topic</div></div>
+    <div class="col">
+      <div class="clabel">Theory + Code</div>
+      <div class="ctitle">Hidden Markov Model (HMM) for POS Tagging</div>
+      <ul class="topics">
+        <li>HMM components: states (tags), observations (words), transitions, emissions</li>
+        <li>Viterbi algorithm: dynamic programming for most likely tag sequence</li>
+        <li>Forward algorithm: computing sequence probability P(O|λ)</li>
+        <li>Transition probabilities: P(tᵢ | tᵢ₋₁) from corpus counts</li>
+        <li>Emission probabilities: P(wᵢ | tᵢ) with Laplace smoothing</li>
+      </ul>
+    </div>
+    <div class="col">
+      <div class="clabel">Libraries & Dataset</div>
+      <div class="tech">
+        <span class="tb">numpy</span><span class="tb">nltk</span>
+        <span class="tb">hmmlearn</span><span class="tb">Brown Corpus</span>
+      </div>
+      <div class="desc">Implement HMM POS tagger from scratch with Viterbi decoding. Visualise transition and emission matrices as heatmaps. Compare accuracy vs rule-based backoff chain.</div>
+      <div class="diff">⬛⬛⬛⬜ Advanced</div>
+    </div>
+    <div class="col">
+      <div class="clabel">Historical + Interview</div>
+      <div class="htags">
+        <span class="htag">Viterbi 1967</span>
+        <span class="htag">Baum-Welch</span>
+        <span class="htag">Markov assumption</span>
+        <span class="htag">Decode vs Learn</span>
+        <span class="htag">Why HMM over rules?</span>
+      </div>
+      <div class="desc" style="margin-top:8px">HMMs from speech recognition (Jelinek, 1976 at IBM) adapted to POS tagging by Church (1988). First purely statistical NLP system to beat rule-based.</div>
+    </div>
+  </div>
+
+  <div class="card cat-stat" data-cat="cat-stat">
+    <div class="snum"><div class="sn">04</div><div class="sl">Topic</div></div>
+    <div class="col">
+      <div class="clabel">Theory + Code</div>
+      <div class="ctitle">Maximum Entropy (ME) Model for POS Tagging</div>
+      <ul class="topics">
+        <li>MaxEnt principle: most uniform distribution consistent with constraints</li>
+        <li>Feature engineering: word shape, prefix, suffix, context window</li>
+        <li>sklearn LogisticRegression as MaxEnt implementation</li>
+        <li>Feature extraction pipeline for POS tagging</li>
+        <li>Comparison: HMM (generative) vs MaxEnt (discriminative)</li>
+      </ul>
+    </div>
+    <div class="col">
+      <div class="clabel">Libraries & Dataset</div>
+      <div class="tech">
+        <span class="tb">sklearn</span><span class="tb">nltk</span>
+        <span class="tb">numpy</span><span class="tb">CoNLL-2000</span>
+      </div>
+      <div class="desc">Build a MaxEnt POS tagger using LogisticRegression with handcrafted features (word, suffix, shape, neighbours). Compare vs HMM on Brown Corpus accuracy.</div>
+      <div class="diff">⬛⬛⬜⬜ Intermediate</div>
+    </div>
+    <div class="col">
+      <div class="clabel">Historical + Interview</div>
+      <div class="htags">
+        <span class="htag">Generative vs Discriminative</span>
+        <span class="htag">MaxEnt Ratnaparkhi 1996</span>
+        <span class="htag">Feature engineering</span>
+        <span class="htag">L1/L2 regularisation</span>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /grid -->
+
+<!-- ══ SECTION 3: ML MODELS ══ -->
+<div class="sec sm">
+  <span class="sec-tag">ML Models</span>
+  <span class="sec-title">SVM & CRF for Sequence Labelling</span>
+  <span class="sec-count">Topics 5 – 6</span>
+</div>
+<div class="grid">
+
+  <div class="card cat-ml" data-cat="cat-ml">
+    <div class="snum"><div class="sn">05</div><div class="sl">Topic</div></div>
+    <div class="col">
+      <div class="clabel">Theory + Code</div>
+      <div class="ctitle">SVM for POS Tagging (SVM-HMM)</div>
+      <ul class="topics">
+        <li>SVM for multi-class sequence classification</li>
+        <li>Feature vectors: contextual, lexical, morphological</li>
+        <li>sklearn SVC with one-vs-rest strategy</li>
+        <li>Comparison: local SVM vs sequence models (HMM, CRF)</li>
+        <li>Confusion matrix analysis: which tags are confused?</li>
+      </ul>
+    </div>
+    <div class="col">
+      <div class="clabel">Libraries & Dataset</div>
+      <div class="tech">
+        <span class="tb">sklearn</span><span class="tb">nltk</span>
+        <span class="tb">seaborn</span><span class="tb">Brown/CoNLL</span>
+      </div>
+      <div class="desc">Build a feature-rich SVM tagger. Compare SVM vs HMM vs MaxEnt on a small held-out test set. Plot per-tag F1 scores and a confusion matrix heatmap.</div>
+      <div class="diff">⬛⬛⬜⬜ Intermediate</div>
+    </div>
+    <div class="col">
+      <div class="clabel">Historical + Interview</div>
+      <div class="htags">
+        <span class="htag">Gimenez & Marquez 2004</span>
+        <span class="htag">Local vs global model</span>
+        <span class="htag">Label dependency problem</span>
+        <span class="htag">Why CRF beats SVM?</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="card cat-ml" data-cat="cat-ml">
+    <div class="snum"><div class="sn">06</div><div class="sl">Topic</div></div>
+    <div class="col">
+      <div class="clabel">Theory + Code</div>
+      <div class="ctitle">Conditional Random Field (CRF) for POS + NER</div>
+      <ul class="topics">
+        <li>CRF: discriminative, globally normalised, sequence-aware</li>
+        <li>Feature templates: word, POS, suffix, BIO tags</li>
+        <li>sklearn-crfsuite for POS and NER jointly</li>
+        <li>F1 evaluation per entity/tag type</li>
+        <li>CRF vs HMM vs BERT-based models — evolution</li>
+      </ul>
+    </div>
+    <div class="col">
+      <div class="clabel">Libraries & Dataset</div>
+      <div class="tech">
+        <span class="tb">sklearn-crfsuite</span><span class="tb">nltk</span>
+        <span class="tb">CoNLL-2003 (NER)</span><span class="tb">spacy</span>
+      </div>
+      <div class="desc">Train a CRF tagger with feature templates on CoNLL-2003. Evaluate with per-tag F1. Show CRF learning BIO tag transitions implicitly via features. Compare vs NLTK chunker.</div>
+      <div class="diff">⬛⬛⬛⬜ Advanced</div>
+    </div>
+    <div class="col">
+      <div class="clabel">Historical + Interview</div>
+      <div class="htags">
+        <span class="htag">Lafferty et al. 2001</span>
+        <span class="htag">Global normalisation</span>
+        <span class="htag">CRF vs HMM</span>
+        <span class="htag">BIO scheme</span>
+        <span class="htag">Label bias problem</span>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /grid -->
+
+<!-- ══ SECTION 4: CFG FOUNDATIONS ══ -->
+<div class="sec sc">
+  <span class="sec-tag">CFG Core</span>
+  <span class="sec-title">Context Free Grammars — Rules, Trees & Constituency</span>
+  <span class="sec-count">Topics 7 – 8</span>
+</div>
+<div class="grid">
+
+  <div class="card cat-cfg" data-cat="cat-cfg">
+    <div class="snum"><div class="sn">07</div><div class="sl">Topic</div></div>
+    <div class="col">
+      <div class="clabel">Theory + Code</div>
+      <div class="ctitle">CFG Rules, Parse Trees & Constituency</div>
+      <ul class="topics">
+        <li>CFG formalism: terminals, non-terminals, production rules S → NP VP</li>
+        <li>Constituency vs dependency: phrase structure</li>
+        <li>NLTK CFG and ChartParser — build and parse sentences</li>
+        <li>Parse tree traversal: leaves, depth, subtrees</li>
+        <li>Sentence-level construction: S → NP VP, embedded clauses</li>
+      </ul>
+    </div>
+    <div class="col">
+      <div class="clabel">Libraries & Dataset</div>
+      <div class="tech">
+        <span class="tb">nltk.CFG</span><span class="tb">nltk.ChartParser</span>
+        <span class="tb">nltk.Tree</span><span class="tb">Custom toy grammar</span>
+      </div>
+      <div class="desc">Define a CFG grammar with NLTK. Parse sample sentences. Draw parse trees. Demonstrate ambiguity (PP attachment). Compare CFG with dependency parsing.</div>
+      <div class="diff">⬛⬛⬜⬜ Intermediate</div>
+    </div>
+    <div class="col">
+      <div class="clabel">Historical + Interview</div>
+      <div class="htags">
+        <span class="htag">Chomsky 1956</span>
+        <span class="htag">Chomsky Normal Form</span>
+        <span class="htag">CFG vs dependency</span>
+        <span class="htag">PP attachment ambiguity</span>
+        <span class="htag">CYK algorithm</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="card cat-cfg" data-cat="cat-cfg">
+    <div class="snum"><div class="sn">08</div><div class="sl">Topic</div></div>
+    <div class="col">
+      <div class="clabel">Theory + Code</div>
+      <div class="ctitle">NP, VP, Coordination & Agreement</div>
+      <ul class="topics">
+        <li>Noun Phrase structure: Det + (Adj*) + N (+ PP*)</li>
+        <li>Verb Phrase & subcategorisation frames: intransitive, transitive, ditransitive</li>
+        <li>Coordination: NP and NP, VP and VP (symmetry constraint)</li>
+        <li>Agreement features: number, person, gender morphology</li>
+        <li>Feature-based CFG (FCFG) with NLTK for agreement checking</li>
+      </ul>
+    </div>
+    <div class="col">
+      <div class="clabel">Libraries & Dataset</div>
+      <div class="tech">
+        <span class="tb">nltk.FeatureGrammar</span><span class="tb">nltk.RecursiveDescent</span>
+        <span class="tb">spacy</span><span class="tb">WSJ Penn Treebank</span>
+      </div>
+      <div class="desc">Build a feature-based CFG that enforces subject-verb agreement. Parse NPs with coordination. Demonstrate subcategorisation frames. Test grammatical vs ungrammatical sentences.</div>
+      <div class="diff">⬛⬛⬜⬜ Intermediate</div>
+    </div>
+    <div class="col">
+      <div class="clabel">Historical + Interview</div>
+      <div class="htags">
+        <span class="htag">Subcategorisation</span>
+        <span class="htag">Coordination constraint</span>
+        <span class="htag">Agreement in CFG</span>
+        <span class="htag">Feature structures</span>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /grid -->
+
+<!-- ══ SECTION 5: GRAMMAR STRUCTURES ══ -->
+<div class="sec sg">
+  <span class="sec-tag">Grammar</span>
+  <span class="sec-title">Probabilistic CFG & Grammar Induction</span>
+  <span class="sec-count">Topics 9 – 10</span>
+</div>
+<div class="grid">
+
+  <div class="card cat-gram" data-cat="cat-gram">
+    <div class="snum"><div class="sn">09</div><div class="sl">Topic</div></div>
+    <div class="col">
+      <div class="clabel">Theory + Code</div>
+      <div class="ctitle">Probabilistic CFG (PCFG) & CYK Parsing</div>
+      <ul class="topics">
+        <li>PCFG: CFG rules annotated with probabilities P(α→β)</li>
+        <li>CYK (Cocke-Younger-Kasami) algorithm: bottom-up chart parsing</li>
+        <li>Chomsky Normal Form (CNF) conversion</li>
+        <li>Parsing ambiguity resolution via maximum probability parse</li>
+        <li>Reading PCFG from Penn Treebank with NLTK</li>
+      </ul>
+    </div>
+    <div class="col">
+      <div class="clabel">Libraries & Dataset</div>
+      <div class="tech">
+        <span class="tb">nltk.PCFG</span><span class="tb">nltk.ViterbiParser</span>
+        <span class="tb">numpy</span><span class="tb">Penn Treebank (small)</span>
+      </div>
+      <div class="desc">Implement CYK algorithm from scratch on toy grammar. Use NLTK ViterbiParser for PCFG. Show how probability resolves PP-attachment ambiguity. Convert grammar to CNF.</div>
+      <div class="diff">⬛⬛⬛⬜ Advanced</div>
+    </div>
+    <div class="col">
+      <div class="clabel">Historical + Interview</div>
+      <div class="htags">
+        <span class="htag">CYK O(n³) complexity</span>
+        <span class="htag">CNF conversion</span>
+        <span class="htag">PCFG disambiguation</span>
+        <span class="htag">Earley parser</span>
+        <span class="htag">Treebank grammars</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="card cat-parse" data-cat="cat-parse">
+    <div class="snum"><div class="sn">10</div><div class="sl">Topic</div></div>
+    <div class="col">
+      <div class="clabel">Theory + Code</div>
+      <div class="ctitle">Modern Parsing: spaCy + Constituency vs Dependency</div>
+      <ul class="topics">
+        <li>spaCy's dependency parser: arc labels, head words</li>
+        <li>Constituency parsing with benepar (Berkeley Neural Parser)</li>
+        <li>Comparing constituency trees vs dependency graphs</li>
+        <li>Extracting NPs, VPs, clauses programmatically</li>
+        <li>Discourse: parse trees for question answering, information extraction</li>
+      </ul>
+    </div>
+    <div class="col">
+      <div class="clabel">Libraries & Dataset</div>
+      <div class="tech">
+        <span class="tb">spacy</span><span class="tb">benepar</span>
+        <span class="tb">nltk</span><span class="tb">displacy</span><span class="tb">WSJ sentences</span>
+      </div>
+      <div class="desc">Use spaCy's dep parser. Install benepar for constituency. Side-by-side comparison of both representations on same sentence. Extract all NPs with regex over parse trees.</div>
+      <div class="diff">⬛⬛⬜⬜ Intermediate</div>
+    </div>
+    <div class="col">
+      <div class="clabel">Historical + Interview</div>
+      <div class="htags">
+        <span class="htag">Constituency vs dependency</span>
+        <span class="htag">Arc-eager parsing</span>
+        <span class="htag">Neural parsers</span>
+        <span class="htag">Treebank accuracy (UAS/LAS)</span>
+        <span class="htag">Parse for downstream NLP</span>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /grid -->
+
+<!-- TIMELINE -->
+<div class="timeline-wrap">
+  <h2>// NLP Parsing History — An Analytical Timeline</h2>
+  <div class="tl">
+    <div class="tl-spine"></div>
+    <div class="tl-item tl-pos"><div class="tl-year">1956</div><div class="tl-dot"></div><div class="tl-content"><div class="tl-t">Chomsky — Formal Language Hierarchy</div><div class="tl-d">Introduced context-free grammars in "Three models for the description of language." Foundation of all parse theory.</div></div></div>
+    <div class="tl-item tl-pos"><div class="tl-year">1961</div><div class="tl-dot"></div><div class="tl-content"><div class="tl-t">Brown Corpus — First Annotated Corpus</div><div class="tl-d">One million words of American English, POS-annotated. First large-scale empirical NLP resource.</div></div></div>
+    <div class="tl-item tl-cfg"><div class="tl-year">1967</div><div class="tl-dot"></div><div class="tl-content"><div class="tl-t">Viterbi Algorithm</div><div class="tl-d">Dynamic programming for finding the most likely path through an HMM. Core of all sequence decoders.</div></div></div>
+    <div class="tl-item tl-stat"><div class="tl-year">1976</div><div class="tl-dot"></div><div class="tl-content"><div class="tl-t">Statistical NLP begins at IBM — Jelinek</div><div class="tl-d">Applied HMM to speech recognition. Same math later applied to POS tagging (Church, 1988).</div></div></div>
+    <div class="tl-item tl-pos"><div class="tl-year">1992</div><div class="tl-dot"></div><div class="tl-content"><div class="tl-t">Brill Tagger — Error-Driven Rule Learning</div><div class="tl-d">Transformation-based learning: start with most-frequent tag, learn rules to fix errors. Hybrid of rule-based and statistical.</div></div></div>
+    <div class="tl-item tl-cfg"><div class="tl-year">1993</div><div class="tl-dot"></div><div class="tl-content"><div class="tl-t">Penn Treebank (Marcus et al.)</div><div class="tl-d">2.9M words of Wall Street Journal, constituency-annotated. Gold standard for parsing and POS evaluation for 30 years.</div></div></div>
+    <div class="tl-item tl-stat"><div class="tl-year">1996</div><div class="tl-dot"></div><div class="tl-content"><div class="tl-t">MaxEnt POS Tagger (Ratnaparkhi)</div><div class="tl-d">First discriminative POS tagger using maximum entropy / logistic regression. 96.6% accuracy on PTB.</div></div></div>
+    <div class="tl-item tl-ml"><div class="tl-year">2001</div><div class="tl-dot"></div><div class="tl-content"><div class="tl-t">CRF — Conditional Random Fields (Lafferty et al.)</div><div class="tl-d">Solved the label bias problem in MEMMs. Became the dominant sequence labelling method for a decade.</div></div></div>
+    <div class="tl-item tl-ml"><div class="tl-year">2011</div><div class="tl-dot"></div><div class="tl-content"><div class="tl-t">Neural Network POS (Collobert et al.)</div><div class="tl-d">"Natural Language Processing (almost) from scratch." Word embeddings + CNN replaced hand-crafted features.</div></div></div>
+    <div class="tl-item tl-ml"><div class="tl-year">2018</div><div class="tl-dot"></div><div class="tl-content"><div class="tl-t">BERT — Contextual Embeddings Replace CRF</div><div class="tl-d">Fine-tuned BERT achieves 97%+ POS accuracy. CRF head still used on top of BERT for NER/POS in production.</div></div></div>
+    <div class="tl-item tl-ml"><div class="tl-year">2024</div><div class="tl-dot"></div><div class="tl-content"><div class="tl-t">LLM-based Parsing</div><div class="tl-d">GPT-4/Claude perform constituency and dependency parsing in-context. Classical grammar still needed for explainability and low-resource languages.</div></div></div>
+  </div>
+</div>
+
+<!-- SUMMARY TABLE -->
+<div class="table-wrap">
+  <h2>// Teaching Sequence</h2>
+  <table class="summary">
+    <thead>
+      <tr>
+        <th>Topic</th><th>Category</th><th>Difficulty</th><th>Core Libraries</th><th>Builds On</th><th>Key Interview Concept</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr class="cat-rule-row"><td>01 — Penn Treebank & Backoff Tagger</td><td>Rule-Based POS</td><td>⬛⬜⬜⬜</td><td>nltk, spacy</td><td>Module 1 pipeline</td><td>PTB tagset, backoff chain</td></tr>
+      <tr class="cat-rule-row"><td>02 — Ambiguity & Unknown Words</td><td>Rule-Based POS</td><td>⬛⬛⬜⬜</td><td>nltk, regex</td><td>Topic 01</td><td>OOV, lexical ambiguity</td></tr>
+      <tr class="cat-stat-row"><td>03 — HMM POS Tagger + Viterbi</td><td>Stochastic</td><td>⬛⬛⬛⬜</td><td>numpy, hmmlearn</td><td>Module 2 N-grams</td><td>Viterbi, Markov assumption</td></tr>
+      <tr class="cat-stat-row"><td>04 — MaxEnt / LogReg POS</td><td>Stochastic</td><td>⬛⬛⬜⬜</td><td>sklearn</td><td>Topic 03</td><td>Generative vs discriminative</td></tr>
+      <tr class="cat-ml-row"><td>05 — SVM POS Tagger</td><td>ML Models</td><td>⬛⬛⬜⬜</td><td>sklearn, seaborn</td><td>Topic 04</td><td>Feature engineering</td></tr>
+      <tr class="cat-ml-row"><td>06 — CRF POS + NER</td><td>ML Models</td><td>⬛⬛⬛⬜</td><td>sklearn-crfsuite</td><td>Topics 03–05</td><td>Label bias, global normalisation</td></tr>
+      <tr class="cat-cfg-row"><td>07 — CFG Rules & Parse Trees</td><td>CFG Core</td><td>⬛⬛⬜⬜</td><td>nltk.CFG</td><td>Topic 01 (tags)</td><td>Chomsky hierarchy, CNF</td></tr>
+      <tr class="cat-cfg-row"><td>08 — NP/VP/Agreement/FCFG</td><td>Grammar Structures</td><td>⬛⬛⬜⬜</td><td>nltk.FeatureGrammar</td><td>Topic 07</td><td>Subcategorisation, agreement</td></tr>
+      <tr class="cat-gram-row"><td>09 — PCFG & CYK Algorithm</td><td>Grammar</td><td>⬛⬛⬛⬜</td><td>nltk.PCFG, numpy</td><td>Topics 07–08</td><td>O(n³) CYK, PCFG disambiguation</td></tr>
+      <tr class="cat-parse-row"><td>10 — Modern Parsing: spaCy+benepar</td><td>Parsing</td><td>⬛⬛⬜⬜</td><td>spacy, benepar</td><td>All above</td><td>Constituency vs dependency, UAS/LAS</td></tr>
+    </tbody>
+  </table>
+</div>
+
+</div><!-- /wrap -->
+
+<footer>
+  <span>MTech NLP · Module 3 · POS Tagging & CFG · 10 Coding Topics</span>
+  <span>Google Colab compatible · NLTK · spaCy · sklearn-crfsuite · hmmlearn</span>
+</footer>
+
+<script>
+const chips = document.querySelectorAll('.chip');
+const cards = document.querySelectorAll('.card');
+const active = new Set(['cat-rule','cat-stat','cat-ml','cat-cfg','cat-gram','cat-parse']);
+
+chips.forEach(chip => {
+  chip.addEventListener('click', () => {
+    const cat = chip.dataset.cat;
+    if (active.has(cat)) {
+      if (active.size === 1) return;
+      active.delete(cat); chip.classList.remove('on');
+    } else {
+      active.add(cat); chip.classList.add('on');
+    }
+    cards.forEach(c => c.classList.toggle('hidden', !active.has(c.dataset.cat)));
+  });
+});
+</script>
+</body>
+</html>
