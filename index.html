@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MTech NLP — Coding Modules Portal</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="/html/https://fonts.googleapis.com">
+    <link rel="preconnect" href="/html/https://fonts.gstatic.com" crossorigin>
+    <link href="/html/https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Outfit', 'sans-serif'],
+                        mono: ['Space Mono', 'monospace'],
+                    },
+                    colors: {
+                        dark: '#050b14',
+                        card: '#0f172a',
+                        m1: '#00d4ff', // Cyan
+                        m2: '#f97316', // Orange
+                        m3: '#10b981', // Emerald
+                        m4: '#3b82f6', // Blue
+                        m5: '#8b5cf6', // Violet
+                    },
+                    animation: {
+                        blob: "blob 7s infinite",
+                    },
+                    keyframes: {
+                        blob: {
+                            "0%": { transform: "translate(0px, 0px) scale(1)" },
+                            "33%": { transform: "translate(30px, -50px) scale(1.1)" },
+                            "66%": { transform: "translate(-20px, 20px) scale(0.9)" },
+                            "100%": { transform: "translate(0px, 0px) scale(1)" }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #050b14;
+            color: #f8fafc;
+            overflow-x: hidden;
+        }
+        
+        .glass-card {
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .glass-card:hover {
+            background: rgba(30, 41, 59, 0.7);
+            border-color: rgba(255, 255, 255, 0.15);
+            transform: translateY(-4px);
+        }
+
+        /* Subtle grid background */
+        .bg-grid {
+            background-image: linear-gradient(to right, rgba(255,255,255,0.03) 1px, transparent 1px),
+                              linear-gradient(to bottom, rgba(255,255,255,0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+    </style>
+</head>
+<body class="relative min-h-screen bg-grid antialiased selection:bg-m4 selection:text-white pb-20">
+
+    <!-- Ambient Background Blobs -->
+    <div class="absolute inset-0 overflow-hidden pointer-events-none">
+        <div class="absolute top-0 -left-4 w-72 h-72 bg-m4 rounded-full mix-blend-screen filter blur-[100px] opacity-20 animate-blob"></div>
+        <div class="absolute top-0 -right-4 w-72 h-72 bg-m5 rounded-full mix-blend-screen filter blur-[100px] opacity-20 animate-blob" style="animation-delay: 2s;"></div>
+        <div class="absolute -bottom-8 left-20 w-72 h-72 bg-m1 rounded-full mix-blend-screen filter blur-[100px] opacity-20 animate-blob" style="animation-delay: 4s;"></div>
+    </div>
+
+    <!-- Header -->
+    <header class="relative z-10 pt-20 pb-12 px-6 max-w-6xl mx-auto text-center">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs font-mono text-slate-400 mb-6 uppercase tracking-widest">
+            <span class="w-2 h-2 rounded-full bg-m4 animate-pulse"></span>
+            MTech NLP Curriculum
+        </div>
+        <h1 class="text-4xl md:text-6xl font-bold mb-6 tracking-tight leading-tight">
+            Interactive <span class="text-transparent bg-clip-text bg-gradient-to-r from-m4 to-m1">Coding Maps</span>
+        </h1>
+        <p class="text-slate-400 text-lg max-w-2xl mx-auto">
+            Explore the complete programming syllabus. From basic text processing pipelines to advanced discourse coherence models, click on any module below to dive into its interactive syllabus.
+        </p>
+    </header>
+
+    <!-- Bento Grid Container -->
+    <main class="relative z-10 max-w-6xl mx-auto px-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-6">
+
+        <!-- Module 1 -->
+        <a href="/html/nlp_module1_coding.html" class="glass-card group block rounded-3xl p-8 transition-all duration-300 lg:col-span-2 relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-m1 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+            
+            <div class="flex justify-between items-start mb-6">
+                <div class="w-12 h-12 rounded-2xl bg-m1/10 flex items-center justify-center text-m1 border border-m1/20 group-hover:scale-110 transition-transform">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                </div>
+                <span class="text-xs font-mono text-m1 bg-m1/10 px-2 py-1 rounded-md border border-m1/20">Module 1</span>
+            </div>
+            
+            <h2 class="text-xl font-semibold text-white mb-3">Concepts That Need Coding</h2>
+            <p class="text-sm text-slate-400 mb-6 line-clamp-3">
+                Generic NLP Pipeline, Text Processing, Information Retrieval, Text Categorization, and core Evaluation Metrics.
+            </p>
+            
+            <div class="flex items-center text-sm font-medium text-slate-300 group-hover:text-m1 transition-colors">
+                Explore Module <span class="ml-2 transform group-hover:translate-x-1 transition-transform">→</span>
+            </div>
+        </a>
+
+        <!-- Module 2 -->
+        <a href="/html/nlp_module2_coding.html" class="glass-card group block rounded-3xl p-8 transition-all duration-300 lg:col-span-2 relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-m2 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+            
+            <div class="flex justify-between items-start mb-6">
+                <div class="w-12 h-12 rounded-2xl bg-m2/10 flex items-center justify-center text-m2 border border-m2/20 group-hover:scale-110 transition-transform">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                </div>
+                <span class="text-xs font-mono text-m2 bg-m2/10 px-2 py-1 rounded-md border border-m2/20">Module 2</span>
+            </div>
+            
+            <h2 class="text-xl font-semibold text-white mb-3">Morphology & N-Grams</h2>
+            <p class="text-sm text-slate-400 mb-6 line-clamp-3">
+                Inflectional Morphology, Regular Expressions, Finite Automata, Finite State Transducers, and N-Gram Language Models.
+            </p>
+            
+            <div class="flex items-center text-sm font-medium text-slate-300 group-hover:text-m2 transition-colors">
+                Explore Module <span class="ml-2 transform group-hover:translate-x-1 transition-transform">→</span>
+            </div>
+        </a>
+
+        <!-- Module 3 -->
+        <a href="/html/NLP_Module3_Coding_Map.html" class="glass-card group block rounded-3xl p-8 transition-all duration-300 lg:col-span-2 relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-m3 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+            
+            <div class="flex justify-between items-start mb-6">
+                <div class="w-12 h-12 rounded-2xl bg-m3/10 flex items-center justify-center text-m3 border border-m3/20 group-hover:scale-110 transition-transform">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path></svg>
+                </div>
+                <span class="text-xs font-mono text-m3 bg-m3/10 px-2 py-1 rounded-md border border-m3/20">Module 3</span>
+            </div>
+            
+            <h2 class="text-xl font-semibold text-white mb-3">POS Tagging & CFG</h2>
+            <p class="text-sm text-slate-400 mb-6 line-clamp-3">
+                Rule-Based & Stochastic POS, Hidden Markov Models, Context Free Grammars, Probabilistic CFG, and Constituency Parsing.
+            </p>
+            
+            <div class="flex items-center text-sm font-medium text-slate-300 group-hover:text-m3 transition-colors">
+                Explore Module <span class="ml-2 transform group-hover:translate-x-1 transition-transform">→</span>
+            </div>
+        </a>
+
+        <!-- Module 4 -->
+        <a href="/html/NLP_Module4_Coding_Map.html" class="glass-card group block rounded-3xl p-8 transition-all duration-300 lg:col-span-3 relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-m4 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+            
+            <div class="flex justify-between items-start mb-6">
+                <div class="w-12 h-12 rounded-2xl bg-m4/10 flex items-center justify-center text-m4 border border-m4/20 group-hover:scale-110 transition-transform">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>
+                </div>
+                <span class="text-xs font-mono text-m4 bg-m4/10 px-2 py-1 rounded-md border border-m4/20">Module 4</span>
+            </div>
+            
+            <h2 class="text-2xl font-semibold text-white mb-3">Semantics & WSD</h2>
+            <p class="text-sm text-slate-400 mb-6 max-w-md">
+                Phrase Attachment, WordNet Lexical Relations, Homonymy & Polysemy detection, Lesk/Yarowsky Algorithms, and ML-based Word Sense Disambiguation.
+            </p>
+            
+            <div class="flex items-center text-sm font-medium text-slate-300 group-hover:text-m4 transition-colors mt-auto">
+                Explore Module <span class="ml-2 transform group-hover:translate-x-1 transition-transform">→</span>
+            </div>
+            
+            <!-- Abstract decor -->
+            <div class="absolute -bottom-10 -right-10 w-40 h-40 bg-m4/5 rounded-full border border-m4/10 group-hover:bg-m4/10 transition-colors"></div>
+        </a>
+
+        <!-- Module 5 -->
+        <a href="/html/NLP_Module5_Coding_Map.html" class="glass-card group block rounded-3xl p-8 transition-all duration-300 lg:col-span-3 relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-m5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+            
+            <div class="flex justify-between items-start mb-6">
+                <div class="w-12 h-12 rounded-2xl bg-m5/10 flex items-center justify-center text-m5 border border-m5/20 group-hover:scale-110 transition-transform">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z"></path></svg>
+                </div>
+                <span class="text-xs font-mono text-m5 bg-m5/10 px-2 py-1 rounded-md border border-m5/20">Module 5</span>
+            </div>
+            
+            <h2 class="text-2xl font-semibold text-white mb-3">Discourse & Coherence</h2>
+            <p class="text-sm text-slate-400 mb-6 max-w-md">
+                Reference Phenomena, Hobbs' Algorithm for Pronouns, Centering Theory, Text Coherence Modeling (Entity Grids), and Rhetorical Structure Theory (RST).
+            </p>
+            
+            <div class="flex items-center text-sm font-medium text-slate-300 group-hover:text-m5 transition-colors mt-auto">
+                Explore Module <span class="ml-2 transform group-hover:translate-x-1 transition-transform">→</span>
+            </div>
+            
+            <!-- Abstract decor -->
+            <div class="absolute -bottom-10 -right-10 w-40 h-40 bg-m5/5 rounded-full border border-m5/10 group-hover:bg-m5/10 transition-colors"></div>
+        </a>
+
+    </main>
+
+    <footer class="relative z-10 mt-20 text-center border-t border-white/10 pt-8 pb-4">
+        <p class="text-slate-500 text-sm font-mono tracking-wide">
+            MTech NLP Program &copy; 2024 &nbsp;·&nbsp; Natural Language Processing
+        </p>
+    </footer>
+
+</body>
+</html>
